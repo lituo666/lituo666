@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>Btrfs 文件系统快照的创建与恢复</title>
+    <url>/2022/11/29/Create-and-restore-btrfs-file-system-snapshots/</url>
+    <content><![CDATA[<p>btrfs 命令介绍、快照的创建与恢复</p>
+<span id="more"></span>
+
+<h2 id="安装必要软件"><a href="#安装必要软件" class="headerlink" title="安装必要软件"></a>安装必要软件</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -Sy btrfs-progs</span><br></pre></td></tr></table></figure>
+
+<h2 id="btrfs-常用命令"><a href="#btrfs-常用命令" class="headerlink" title="btrfs 常用命令"></a>btrfs 常用命令</h2><h3 id="挂载"><a href="#挂载" class="headerlink" title="挂载"></a>挂载</h3><p>btrfs 有个默认子卷，如果不加挂载参数，直接 mount 一个 btrfs 文件系统时挂载出来的是它的默认子卷，而不一定是根，所以可以加 <code>subvol=/</code> 参数来挂载根， <code>compress=zstd</code> 表示启用透明压缩（根据实际添加），如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mount -t btrfs -o subvol=/,compress=zstd /dev/nvme1n1p4 /mnt</span><br></pre></td></tr></table></figure>
+
+<h3 id="查看子卷"><a href="#查看子卷" class="headerlink" title="查看子卷"></a>查看子卷</h3><p>查看 btrfs 子卷, <code>-u</code> 表示显示 uuid ，<code>/mnt</code> 挂载目录（无论挂载的是“根”还是“某个子卷”都可以使用此命令查看全部子卷），如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ btrfs subvolume list -u /mnt</span><br><span class="line">ID 275 gen 25505 top level 5 uuid 2ae825dd-d569-7c49-bc8e-6ebdb74aee20 path timeshift-btrfs/snapshots/2022-07-30_07-41-33/@</span><br><span class="line">ID 276 gen 25505 top level 5 uuid 2f991131-f60b-5c47-bb97-24e6146637f6 path timeshift-btrfs/snapshots/2022-07-30_07-41-33/@home</span><br><span class="line">ID 299 gen 25498 top level 5 uuid d7b2a91e-9517-324a-a2a5-08564bf8c9e2 path timeshift-btrfs/snapshots/2022-08-01_10-08-31/@</span><br><span class="line">ID 300 gen 25498 top level 5 uuid 5888c7db-7cf5-2041-9c66-4de5b78635dc path timeshift-btrfs/snapshots/2022-08-01_10-08-31/@home</span><br><span class="line">ID 304 gen 25593 top level 5 uuid 3a758ddd-dc03-4a41-bbc8-dc4fe50ed5c7 path @</span><br><span class="line">ID 305 gen 25593 top level 5 uuid 418632cd-bce0-304d-aa6d-9110a606917a path @home</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建子卷"><a href="#创建子卷" class="headerlink" title="创建子卷"></a>创建子卷</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">btrfs subvolume create /mnt/zijuan2</span><br></pre></td></tr></table></figure>
+
+<h3 id="删除子卷"><a href="#删除子卷" class="headerlink" title="删除子卷"></a>删除子卷</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">btrfs subvolume delete /mnt/zijuan2</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建快照"><a href="#创建快照" class="headerlink" title="创建快照"></a>创建快照</h2><h3 id="必做工作-仅适用于-Arch-Linux"><a href="#必做工作-仅适用于-Arch-Linux" class="headerlink" title="必做工作 (仅适用于 Arch Linux)"></a>必做工作 (仅适用于 Arch Linux)</h3><p>因为 btrfs 无法对挂载了其他设备的文件夹进行快照，例如 <code>/boot/efi</code> 目录就挂载了efi分区，如果系统更新内核后会影响到该目录，而使用快照恢复后就会导致无法启动系统。<a href="https://wiki.archlinux.org/title/System_backup#Snapshots_and_/boot_partition">解决办法</a>是创建一个文件，该文件会在 pacman 更新内核后对 <code>boot</code> 目录进行备份到 <code>.bootbackup</code> 目录下，文件 <code>/etc/pacman.d/hooks/95-bootbackup.hook</code> 内容如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[Trigger]</span><br><span class="line">Operation = Upgrade</span><br><span class="line">Operation = Install</span><br><span class="line">Operation = Remove</span><br><span class="line">Type = Path</span><br><span class="line">Target = usr/lib/modules/*/vmlinuz</span><br><span class="line"></span><br><span class="line">[Action]</span><br><span class="line">Depends = rsync</span><br><span class="line">Description = Backing up /boot...</span><br><span class="line">When = PostTransaction</span><br><span class="line">Exec = /usr/bin/rsync -a --delete --checksum /boot /.bootbackup</span><br></pre></td></tr></table></figure>
+
+<p>如果使用快照恢复系统后无法启动时，使用 <code>archiso</code> live 系统内进行如下操作即可：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mount /dev/nvme1n1p2 /boot/efi    # 挂载efi分区</span><br><span class="line">rm -rf /boot/*                    # 删除boot内容</span><br><span class="line">cp -af /.bootbackup/boot/* /boot  # 复制备份的boot内容</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建快照-1"><a href="#创建快照-1" class="headerlink" title="创建快照"></a>创建快照</h3><p>所谓的创建快照就是对 btrfs 文件系统中的子卷创建快照，创建的快照其实是个子卷。<br>查看子卷命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ btrfs subvolume list -u /mnt</span><br><span class="line">ID 304 gen 25593 top level 5 uuid 3a758ddd-dc03-4a41-bbc8-dc4fe50ed5c7 path @</span><br><span class="line">ID 305 gen 25593 top level 5 uuid 418632cd-bce0-304d-aa6d-9110a606917a path @home</span><br></pre></td></tr></table></figure>
+
+<p>对 <code>/mnt/@</code> 子卷创建快照，名字为 <code>/mnt/@snapshot</code>，示例如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">btrfs subvolume snapshot /mnt/@ /mnt/@snapshot</span><br></pre></td></tr></table></figure>
+
+<p>对 <code>/mnt/@home</code> 子卷创建快照，名字为 <code>/mnt/@homesnapshot</code>，示例如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">btrfs subvolume snapshot /mnt/@home /mnt/@homesnapshot</span><br></pre></td></tr></table></figure>
+
+<p>查看子卷：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ btrfs subvolume list -u /mnt</span><br><span class="line">ID 304 gen 25593 top level 5 uuid 3a758ddd-dc03-4a41-bbc8-dc4fe50ed5c7 path @</span><br><span class="line">ID 305 gen 25593 top level 5 uuid 418632cd-bce0-304d-aa6d-9110a606917a path @home</span><br><span class="line">ID 306 gen 25593 top level 5 uuid 3a758ddd-dc03-4a41-bbc8-dc4abc1055c7 path @snapshot</span><br><span class="line">ID 307 gen 25593 top level 5 uuid 418632cd-bce0-304d-aa6d-9110a127817a path @homesnapshot</span><br></pre></td></tr></table></figure>
+
+<h2 id="恢复快照"><a href="#恢复快照" class="headerlink" title="恢复快照"></a>恢复快照</h2><div class="note danger"><p>如果恢复的系统已经被挂载启动，就需要使用 Live 系统对快照进行恢复。</p>
+</div>
+
+<p>按照上面的方法创建快照后，当需要恢复 <code>@</code> 和 <code>@home</code> 这两个子卷的快照时，分为如下几步：</p>
+<ol>
+<li>创建当前 <code>@</code> 和 <code>@home</code> 这两个子卷的快照，分别命名为 <code>@before</code> 和 <code>@homebefore</code> ，以防万一恢复失败时可以补救，为了防止浪费空间恢复成功后可手动删除。</li>
+<li>删除 <code>@</code> 和 <code>@home</code> 这两个子卷。</li>
+<li>将需要恢复的 <code>@snapshot</code> 和 <code>@homesnapshot</code> 分别创建名为 <code>@</code> 和 <code>@home</code> 的快照即可。</li>
+<li>重启系统。</li>
+<li>如果恢复成功，可以手动删除 <code>@before</code> 和 <code>@homebefore</code> 这两个子卷。</li>
+</ol>
+<p>实际操作步骤如下： （带有 <code>$</code> 符号的行表示要执行的命令）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">## 1. 备份原来的子卷</span><br><span class="line">$ btrfs subvolume snapshot /mnt/@ /mnt/@before</span><br><span class="line">Create a snapshot of &#x27;/mnt/@&#x27; in &#x27;/mnt/@before&#x27;</span><br><span class="line"></span><br><span class="line">$ btrfs subvolume snapshot /mnt/@home /mnt/@homebefore</span><br><span class="line">Create a snapshot of &#x27;/mnt/@home&#x27; in &#x27;/mnt/@homebefore&#x27;</span><br><span class="line"></span><br><span class="line">## 2. 删除原来的子卷</span><br><span class="line">$ btrfs subvolume delete /mnt/@</span><br><span class="line">Delete subvolume (no-commit): &#x27;/mnt/@&#x27;</span><br><span class="line"></span><br><span class="line">$ btrfs subvolume delete /mnt/@home</span><br><span class="line">Delete subvolume (no-commit): &#x27;/mnt/@home&#x27;</span><br><span class="line"></span><br><span class="line">## 3. 对需要恢复的快照再次创建快照分别名为@ @home</span><br><span class="line">$ btrfs subvolume snapshot /mnt/@snapshot /mnt/@</span><br><span class="line">Create a snapshot of &#x27;/mnt/@snapshot&#x27; in &#x27;/mnt/@&#x27;</span><br><span class="line"></span><br><span class="line">$ btrfs subvolume snapshot /mnt/@homesnapshot /mnt/@home</span><br><span class="line">Create a snapshot of &#x27;/mnt/@homesnapshot&#x27; in &#x27;/mnt/@home&#x27;</span><br><span class="line"></span><br><span class="line">## 4. 重启系统</span><br><span class="line">$ reboot</span><br><span class="line"></span><br><span class="line">## 5. 如果恢复成功，可手动删除备份的子卷</span><br><span class="line">$ btrfs subvolume delete /mnt/@before</span><br><span class="line">Delete subvolume (no-commit): &#x27;/mnt/@before&#x27;</span><br><span class="line"></span><br><span class="line">$ btrfs subvolume delete /mnt/@homebefore</span><br><span class="line">Delete subvolume (no-commit): &#x27;/mnt/@homebefore&#x27;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用-timeshift-进行备份与恢复"><a href="#使用-timeshift-进行备份与恢复" class="headerlink" title="使用 timeshift 进行备份与恢复"></a>使用 timeshift 进行备份与恢复</h2><p>此处仅介绍命令行的操作方式，首先安装必要软件：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -Sy timeshift btrfs-progs</span><br></pre></td></tr></table></figure>
+
+<p>切换为 btrfs 模式，同时会自动生成配置文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">timeshift --btrfs</span><br></pre></td></tr></table></figure>
+
+<p>打开配置文件<code>vim /etc/timeshift/timeshift.json</code>，下面是其中主要项目说明：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;backup_device_uuid&quot; : &quot;a99599f4-3acd-4c8d-8f7e-82a5df35b22e&quot;, // 可使用 sudo blkid 命令查看对应分区UUID</span><br><span class="line">  &quot;parent_device_uuid&quot; : &quot;&quot;,</span><br><span class="line">  &quot;do_first_run&quot; : &quot;false&quot;,</span><br><span class="line">  &quot;btrfs_mode&quot; : &quot;true&quot;,    // 确认是 true</span><br><span class="line">  &quot;include_btrfs_home_for_backup&quot; : &quot;true&quot;,  // 备份是否包括home目录</span><br><span class="line">  &quot;include_btrfs_home_for_restore&quot; : &quot;true&quot;, // 恢复是否包换home目录</span><br><span class="line">  &quot;stop_cron_emails&quot; : &quot;true&quot;,</span><br><span class="line">  &quot;schedule_monthly&quot; : &quot;false&quot;,     // 修改为 false</span><br><span class="line">  &quot;schedule_weekly&quot; : &quot;false&quot;,      // 修改为 false</span><br><span class="line">  &quot;schedule_daily&quot; : &quot;false&quot;,       // 修改为 false</span><br><span class="line">  &quot;schedule_hourly&quot; : &quot;false&quot;,      // 修改为 false</span><br><span class="line">  &quot;schedule_boot&quot; : &quot;false&quot;,        // 修改为 false</span><br><span class="line">  &quot;count_monthly&quot; : &quot;2&quot;,</span><br><span class="line">  &quot;count_weekly&quot; : &quot;3&quot;,</span><br><span class="line">  &quot;count_daily&quot; : &quot;5&quot;,</span><br><span class="line">  &quot;count_hourly&quot; : &quot;6&quot;,</span><br><span class="line">  &quot;count_boot&quot; : &quot;5&quot;,</span><br><span class="line">  &quot;snapshot_size&quot; : &quot;0&quot;,</span><br><span class="line">  &quot;snapshot_count&quot; : &quot;0&quot;,</span><br><span class="line">  &quot;date_format&quot; : &quot;%Y-%m-%d %H:%M:%S&quot;,</span><br><span class="line">  &quot;exclude&quot; : [],</span><br><span class="line">  &quot;exclude-apps&quot; : []</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>备份</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">timeshift --create --comments &quot;shuo ming&quot;</span><br></pre></td></tr></table></figure>
+
+<p>恢复</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">timeshift --restore</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>Linux</tag>
+        <tag>Btrfs</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>音视频处理软件FFmpeg使用记录</title>
+    <url>/2019/04/11/FFmpeg-tools-use/</url>
+    <content><![CDATA[<p>FFmpeg是一套可以用来记录、转换数字音频、视频，并能将其转化为流的开源计算机程序。采用LGPL或 GPL 许可证。它提供了录制、转换以及流化音视频的完整解决方案。</p>
+<span id="more"></span>
+
+<h2 id="音视频剪裁"><a href="#音视频剪裁" class="headerlink" title="音视频剪裁"></a>音视频剪裁</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -i output.mp4 -ss 00:00:40 -t 30 output1.mp4</span><br></pre></td></tr></table></figure>
+<p><code>-i output.mp4</code>源文件。<br><code>-ss 00:00:40</code>表示剪裁开始时间，时：分：秒<br><code>-t 30</code>表示剪裁时长，单位秒。<br><code>output1.mp4</code>输出文件名。</p>
+<h2 id="音视频合并"><a href="#音视频合并" class="headerlink" title="音视频合并"></a>音视频合并</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -f concat -i inputs.txt out.mp4</span><br></pre></td></tr></table></figure>
+
+<p><code>-f concat</code>合并命令<br><code>-i inputs.txt</code>中input.txt文件中添加需要合并的文件名，格式如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">file &#x27;input1.mp4&#x27;</span><br><span class="line">file &#x27;input2.mp4&#x27;</span><br></pre></td></tr></table></figure>
+<p><code>out.mp4</code>输出文件名</p>
+<h2 id="视频提取音频"><a href="#视频提取音频" class="headerlink" title="视频提取音频"></a>视频提取音频</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -i input.mp4 -vn output.mp3</span><br></pre></td></tr></table></figure>
+<p><code>-i input.mp4</code>输入文件<br><code>-vn</code>提取音频<br><code>-acodec copy</code>音频编码方式不变<br><code>output.mp3</code>输出文件</p>
+]]></content>
+      <tags>
+        <tag>ffmpeg</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>FiveM服务器搭建</title>
+    <url>/2019/02/25/FiveM-Server-Setup-Windows/</url>
+    <content><![CDATA[<p>玩GTA5都是想在游戏里“为所欲为”，我们可以装修改器和装几个MOD，这些方法我们可以在单机的时候玩，但是自己玩总归是有些无聊。我们也知道GTA5在线模式，但是因为装了修改器和MOD有可能被封号。<br>我需要一种办法，既能在游戏里“为所欲为”，又能和小伙伴们联机玩游戏，接下来我们就介绍搭建FiveM服务器。</p>
+<span id="more"></span>
+
+<div class="note danger"><p><strong>本篇文章已过时，请参考官方文档<a href="https://docs.fivem.net/docs/">https://docs.fivem.net/docs/</a></strong></p>
+</div>
+
+<h2 id="下载服务器文件"><a href="#下载服务器文件" class="headerlink" title="下载服务器文件"></a>下载服务器文件</h2><p>首先，介绍FiveM服务器官网：<a href="https://fivem.net/">https://fivem.net/</a> 点击<code>Download server(non-commercial)</code>如下图所示:</p>
+<img src="https://s2.ax1x.com/2019/02/28/k7z0K0.jpg" alt="k7z0K0.jpg" border="0" title="点击方框" />
+
+<p>网页跳转至说明文档，如下图所示:</p>
+<img src="https://s2.ax1x.com/2019/02/28/kHSSZ8.jpg" alt="kHSSZ8.jpg" border="0" />
+
+<p>服务器可以运行在Windows或者Linux上，这里讲解安装在Windows服务器上（Linux服务器看<a href="https://lituo666.top/">这里</a>），在上图中其实已经写着安装步骤，如果是Chrome浏览器可以右键翻译成中文。接下来详细讲解每一步操作。</p>
+<h3 id="安装Visual-C-组件"><a href="#安装Visual-C-组件" class="headerlink" title="安装Visual C++组件"></a>安装Visual C++组件</h3><p>安装<a href="https://go.microsoft.com/fwlink/?LinkId=746572">Visual C++ redistributable 2017</a>或更高版本。点击即可下载，这个文件不大，下载速度很快，然后双击进行安装。</p>
+<h3 id="下载主要文件"><a href="#下载主要文件" class="headerlink" title="下载主要文件"></a>下载主要文件</h3><p>点击<a href="https://runtime.fivem.net/artifacts/fivem/build_server_windows/master/">这里</a>，根据时间，选择最新的文件点击进行下载，然后解压文件，去下图所示:</p>
+<img src="https://s2.ax1x.com/2019/02/28/kHS1zR.jpg" alt="kHS1zR.jpg" border="0" />
+<img src="https://s2.ax1x.com/2019/02/28/kHS5Ss.jpg" alt="kHS5Ss.jpg" border="0" />
+
+<h3 id="下载资源文件"><a href="#下载资源文件" class="headerlink" title="下载资源文件"></a>下载资源文件</h3><p>点击<a href="https://github.com/citizenfx/cfx-server-data">这里</a>，然后点击绿色按钮<code>Clone or download</code>再点击<code>Download ZIP</code>进行下载。如下图所示：</p>
+<img src="https://s2.ax1x.com/2019/02/28/kHSHmV.jpg" alt="kHSHmV.jpg" border="0" />
+
+<h2 id="服务器配置"><a href="#服务器配置" class="headerlink" title="服务器配置"></a>服务器配置</h2><h3 id="解压服务器主要文件"><a href="#解压服务器主要文件" class="headerlink" title="解压服务器主要文件"></a>解压服务器主要文件</h3><p>将<a href="#%E4%B8%8B%E8%BD%BD%E4%B8%BB%E8%A6%81%E6%96%87%E4%BB%B6">前面</a>下载的<code>server.zip</code>文件解压，如下图所示：</p>
+<img src="https://s2.ax1x.com/2019/02/28/kHpKnP.jpg" alt="kHpKnP.jpg" border="0" />
+
+<h3 id="解压资源文件"><a href="#解压资源文件" class="headerlink" title="解压资源文件"></a>解压资源文件</h3><p>将<a href="%E4%B8%8B%E8%BD%BD%E8%B5%84%E6%BA%90%E6%96%87%E4%BB%B6">前面</a>下载的<code>cfx-server-data-master.zip</code>文件解压到服务器文件夹中去。如下图所示：</p>
+<img src="https://s2.ax1x.com/2019/02/28/kHpBAU.jpg" alt="kHpBAU.jpg" border="0" />
+
+<h3 id="添加配置文件"><a href="#添加配置文件" class="headerlink" title="添加配置文件"></a>添加配置文件</h3><p>点击<a href="https://docs.fivem.net/server-manual/setting-up-a-server/#server-cfg">这里</a>，将代码全部复制，如下图所示：</p>
+<img src="https://s2.ax1x.com/2019/02/28/kHpI4e.jpg" alt="kHpI4e.jpg" border="0" />
+
+<p>进入<code>cfx-server-data-master</code>目录下，新建文本文档，修改后缀为<code>cfg</code>，打开文件，将刚刚复制的粘贴进去。<br>下面是详细的配置说明</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 一般情况下不用修改!</span><br><span class="line"># 只有使用多个服务器协议的时候才需要更改。默认的TCP和UDP端口为30120</span><br><span class="line">endpoint_add_tcp &quot;0.0.0.0:30120&quot;</span><br><span class="line">endpoint_add_udp &quot;0.0.0.0:30120&quot;</span><br><span class="line"></span><br><span class="line"># 默认启动资源。</span><br><span class="line">start mapmanager</span><br><span class="line">start chat</span><br><span class="line">start spawnmanager</span><br><span class="line">start sessionmanager</span><br><span class="line">start fivem</span><br><span class="line">start hardcap</span><br><span class="line">start rconlog</span><br><span class="line">start scoreboard</span><br><span class="line">start playernames</span><br><span class="line"></span><br><span class="line"># 允许玩家使用scripthook挂载的修改器，例如lambda菜单。</span><br><span class="line"># 设置为0可以禁用。</span><br><span class="line">sv_scriptHookAllowed 1</span><br><span class="line"></span><br><span class="line"># 取消前面的#可以启动RCON，记住你更改的密码。</span><br><span class="line">#rcon_password changeme			#一般用不到</span><br><span class="line"></span><br><span class="line"># 服务器标签，中间用逗号隔开</span><br><span class="line"># 例如：</span><br><span class="line"># - sets tags &quot;drifting, cars, racing&quot;</span><br><span class="line"># 或者：</span><br><span class="line"># - sets tags &quot;roleplay, military, tanks&quot;</span><br><span class="line">sets tags &quot;default&quot;</span><br><span class="line"></span><br><span class="line"># 设置服务器横幅或者链接横幅的URL</span><br><span class="line"># 大小没有限制，任何图像都可以.</span><br><span class="line">#sets banner_detail &quot;http://url.to/image.png&quot;</span><br><span class="line">#sets banner_connecting &quot;http://url.to/image.png&quot;</span><br><span class="line"></span><br><span class="line"># 设置服务器名称</span><br><span class="line">sv_hostname &quot;My new FXServer!&quot;</span><br><span class="line"></span><br><span class="line"># 嵌套配置！一般不改。</span><br><span class="line">#exec server_internal.cfg</span><br><span class="line"></span><br><span class="line"># 服务器LOGO图标 (96x96 PNG文件)</span><br><span class="line">#load_server_icon myLogo.png</span><br><span class="line"></span><br><span class="line"># 可以在脚本中使用的封面。</span><br><span class="line">set temp_convar &quot;hey world!&quot;</span><br><span class="line"></span><br><span class="line"># #如果你不想服务器显示在FiveM网页服务器列表，可以把#号删掉。</span><br><span class="line">#sv_master1 &quot;&quot;</span><br><span class="line"></span><br><span class="line"># 只能让Steam或者第三方运营商进入你的FiveM服务器?</span><br><span class="line"># 不要忘记Social Club也是第三方提供商!</span><br><span class="line"># 一般不改</span><br><span class="line">#sv_authMaxVariance 1</span><br><span class="line">#sv_authMinTrust 5</span><br><span class="line"></span><br><span class="line"># 添加系统管理员。</span><br><span class="line">add_ace group.admin command allow # allow all commands</span><br><span class="line">add_ace group.admin command.quit deny # but don&#x27;t allow quit</span><br><span class="line">add_principal identifier.steam:110000112345678 group.admin # add the admin to the group</span><br><span class="line"></span><br><span class="line"># 在外部输出日志上不显示玩家的信息。</span><br><span class="line">sv_endpointprivacy true</span><br><span class="line"></span><br><span class="line"># 服务器人数设置 (必须在 1 到 32)</span><br><span class="line">sv_maxclients 32</span><br><span class="line"></span><br><span class="line"># 服务器密钥 (https://keymaster.fivem.net)</span><br><span class="line">sv_licenseKey changeme</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>1、先在<a href="https://forum.fivem.net/">FiveM论坛</a>注册账户。<br>2、再去获取<a href="https://keymaster.fivem.net/">服务器密钥</a>（打不开请挂代理）,服务器IP就是本机的IP,百度即可。如下图所示：<br><img src="https://s2.ax1x.com/2019/03/01/kbFoKH.jpg" alt="kbFoKH.jpg" border="0" /><br><img src="https://s2.ax1x.com/2019/03/01/kbFTrd.jpg" alt="kbFTrd.jpg" border="0" /><br>2、在<code>server.cfg</code>中填写服务器密钥。</p>
+</blockquote>
+<h3 id="添加服务器运行命令"><a href="#添加服务器运行命令" class="headerlink" title="添加服务器运行命令"></a>添加服务器运行命令</h3><p>进入服务器目录<code>FXServer</code>，新建一个文本文档，名称任意，将后缀改为<code>bat</code>然后右键编辑，添加如下代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd /d F:\FXServer\cfx-server-data-master</span><br><span class="line">F:\FXServer\run.cmd +exec server.cfg</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>说明<br>第一行<code>F:\FXServer\cfx-server-data-master</code>是资源文件夹，根据自己实际文件夹路径进行修改。<br>第二行<code>F:\FXServer</code>是服务器目录，根据实际修改；<code>server.cfg</code>是配置文件名。</p>
+</blockquote>
+<h2 id="启动服务器"><a href="#启动服务器" class="headerlink" title="启动服务器"></a>启动服务器</h2><p>双击刚刚新建的后缀为<code>bat</code>的文件，出现如下图说明启动成功。</p>
+<img src="https://s2.ax1x.com/2019/03/01/kbAiOH.jpg" alt="kbAiOH.jpg" border="0" />
+
+]]></content>
+      <tags>
+        <tag>FiveM</tag>
+        <tag>GTA5</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Linux 下 &quot;GNU Screen&quot; 工具的使用</title>
+    <url>/2019/04/16/GUN-Screen-tool-use/</url>
+    <content><![CDATA[<p>GNU Screen 是一个终端复用工具，例如SSH连接时，使用Screen创建一个session后，即便SSH因为不明原因被断开，而这个session中运行的程序也不会终止。</p>
+<span id="more"></span>
+<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">screen -S yourname    -&gt; 新建一个叫yourname的session</span><br><span class="line">screen -ls            -&gt; 列出当前所有的session </span><br><span class="line">screen -r yourname    -&gt; 回到yourname这个session </span><br><span class="line">screen -d yourname    -&gt; 远程detach某个session </span><br><span class="line">screen -d -r yourname -&gt; 结束当前session并回到yourname这个session</span><br></pre></td></tr></table></figure>
+
+<p>组合键<code>Ctrl+A+D</code>暂时离开当前session，将目前的 screen session (可能含有多个 windows) 丢到后台执行，并会回到还没进 screen 时的状态。</p>
+<p>强制关闭某个screen，首先screen -list查看现有screen，然后kill [PID]，如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[root@instance-4x27gapo ~]# screen -list</span><br><span class="line">There are screens on:</span><br><span class="line">	1529.fivem	(Detached)</span><br><span class="line">	1291.pts-0.instance-4x27gapo	(Detached)</span><br><span class="line">2 Sockets in /var/run/screen/S-root.</span><br><span class="line">[root@instance-4x27gapo ~]# kill 1291</span><br><span class="line">[root@instance-4x27gapo ~]# screen -list</span><br><span class="line">There is a screen on:</span><br><span class="line">	1529.fivem	(Detached)</span><br><span class="line">1 Socket in /var/run/screen/S-root.</span><br></pre></td></tr></table></figure>
+
+<!--more-->]]></content>
+      <tags>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Minecraft 必装 MOD</title>
+    <url>/2022/12/18/Minecraft-must-install-mod/</url>
+    <content><![CDATA[<p>常用 Fabric MOD</p>
+<span id="more"></span>
+
+<h3 id="一键背包整理Next-Inventory-Profiles-Next"><a href="#一键背包整理Next-Inventory-Profiles-Next" class="headerlink" title="一键背包整理Next (Inventory Profiles Next)"></a><a href="https://www.mcmod.cn/class/4104.html">一键背包整理Next</a> (Inventory Profiles Next)</h3><ul>
+<li>前置模组：<a href="https://www.mcmod.cn/class/2126.html">Fabric Language Kotlin</a> 和 <a href="https://www.mcmod.cn/class/7713.html">libIPN</a></li>
+</ul>
+<h3 id="钠-sodium"><a href="#钠-sodium" class="headerlink" title="钠 (sodium)"></a><a href="https://www.mcmod.cn/class/2785.html">钠</a> (sodium)</h3><p>渲染优化</p>
+<h3 id="Iris-Shaders"><a href="#Iris-Shaders" class="headerlink" title="Iris Shaders"></a><a href="https://www.mcmod.cn/class/3697.html">Iris Shaders</a></h3><p>与现有的 ShadersModCore&#x2F;OptiFine 光影兼容的 Fabric 渲染模组</p>
+<ul>
+<li>前置模组：<a href="https://www.mcmod.cn/class/2785.html">钠</a> (sodium)</li>
+</ul>
+<h3 id="Xaero的小地图-Xaero’s-Minimap"><a href="#Xaero的小地图-Xaero’s-Minimap" class="headerlink" title="Xaero的小地图 (Xaero’s Minimap)"></a><a href="https://www.mcmod.cn/class/1701.html">Xaero的小地图</a> (Xaero’s Minimap)</h3><h3 id="苹果皮-AppleSkin"><a href="#苹果皮-AppleSkin" class="headerlink" title="苹果皮 (AppleSkin)"></a><a href="https://www.mcmod.cn/class/744.html">苹果皮</a> (AppleSkin)</h3><h3 id="What-The-Hell-Is-That"><a href="#What-The-Hell-Is-That" class="headerlink" title="What The Hell Is That"></a><a href="https://www.mcmod.cn/class/3471.html">What The Hell Is That</a></h3><ul>
+<li>前置模组：<a href="https://www.mcmod.cn/class/6275.html">Bad Packets</a> 和 <a href="https://www.mcmod.cn/class/3124.html">Fabric API</a></li>
+</ul>
+<h3 id="附魔描述-Enchantment-Descriptions"><a href="#附魔描述-Enchantment-Descriptions" class="headerlink" title="附魔描述 (Enchantment Descriptions)"></a><a href="https://www.mcmod.cn/class/1945.html">附魔描述</a> (Enchantment Descriptions)</h3><ul>
+<li>前置模组：<a href="https://www.mcmod.cn/class/938.html">Bookshelf</a></li>
+</ul>
+<h3 id="磷-Phosphor"><a href="#磷-Phosphor" class="headerlink" title="磷 (Phosphor)"></a><a href="https://www.mcmod.cn/class/1766.html">磷</a> (Phosphor)</h3><p>Phosphor 是一个致力于优化MC中优化最差的部分一照明躬引擎来节省CPU并以此提高性能的模组。通过一些优化，提高了MC在照明躬擎方面的性能，同时还修复了一些长期存在的照明错误。<br>它支持客户端和服务器，服务端安装时客户端无需安装。<br>使用Phosphor时，在某些维度下游戏生成区块所用时间会减半，生成世界所用时间也将大幅降低。Phosphor不会改变原版游戏的特性且支持绝大多数地形模组。</p>
+<h3 id="锂-Lithium"><a href="#锂-Lithium" class="headerlink" title="锂 (Lithium)"></a><a href="https://www.mcmod.cn/class/2292.html">锂</a> (Lithium)</h3><p>Lithium 是一个免费且开源的优化模组，与其它优化Mod不同，Lithium 致力于着一个标准，即在不修改原版游戏内容的前提下做出更多的优化改进。</p>
+]]></content>
+      <tags>
+        <tag>Minecraft</tag>
+        <tag>Fabric</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>STC8F系列单片机定时器学习</title>
+    <url>/2019/03/15/STC8F-Timer-Learning/</url>
+    <content><![CDATA[<p>本篇文章介绍STC8F系列单片机。具体型号是STC8F2K08S2，主要介绍定时器的使用。</p>
+<span id="more"></span>
+
+<p>由于STC8F添加了很多特殊寄存器，所以请先按下图操作</p>
+<img src="https://s2.ax1x.com/2019/03/15/AELH6s.jpg" alt="AELH6s.jpg" border="0" />
+
+<p>然后写程序时，不需要写<code>#include &lt;reg51.h&gt;</code>而是写<code>#include &lt;stc8.h&gt;</code>,这个头文件已经将特殊功能寄存器全部定义好了。</p>
+<h1 id="Timer4"><a href="#Timer4" class="headerlink" title="Timer4"></a>Timer4</h1><p>Timer4，定时器&#x2F;计数器。</p>
+<h2 id="控制寄存器-T4T3M"><a href="#控制寄存器-T4T3M" class="headerlink" title="控制寄存器-T4T3M"></a>控制寄存器-T4T3M</h2><p>不支持位寻址，复位值[0000,0000]，详细定义请看下图。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEOY4S.jpg" alt="AEOY4S.jpg" border="0" />
+
+<h2 id="中断标志辅助寄存器-UXINTIF"><a href="#中断标志辅助寄存器-UXINTIF" class="headerlink" title="中断标志辅助寄存器-UXINTIF"></a>中断标志辅助寄存器-UXINTIF</h2><p>不支持位寻址，详细定义请看下图。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEjYlQ.jpg" alt="AEjYlQ.jpg" border="0" />
+
+<h2 id="中断使能寄存器-IE"><a href="#中断使能寄存器-IE" class="headerlink" title="中断使能寄存器-IE"></a>中断使能寄存器-IE</h2><p>可位寻址，详细定义请看下图。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEjLnA.jpg" alt="AEjLnA.jpg" border="0" />
+
+<h2 id="中断使能寄存器2-IE2"><a href="#中断使能寄存器2-IE2" class="headerlink" title="中断使能寄存器2-IE2"></a>中断使能寄存器2-IE2</h2><p>不支持位寻址，详细定义请看下图。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEjbXd.jpg" alt="AEjbXd.jpg" border="0" />
+
+<img src="https://s2.ax1x.com/2019/03/15/AEjH6H.jpg" alt="AEjH6H.jpg" border="0" />
+
+<h2 id="工作模式"><a href="#工作模式" class="headerlink" title="工作模式"></a>工作模式</h2><p>定时器&#x2F;计数器4的工作模式固定为 16 位重载模式。<br>T4L和T4H组合成为一个16位寄存器，T4L为低字节，T4H 为高字节。当[T4H,T4L]中的16 位计数值溢出时，系统会自动将内部16 位重载寄存器中的重载值装入[T4H,T4L]中。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEL3YF.jpg" alt="AEL3YF.jpg" border="0" />
+
+<h2 id="定时器初值计算"><a href="#定时器初值计算" class="headerlink" title="定时器初值计算"></a>定时器初值计算</h2><p>计算公式：</p>
+<img src="https://s2.ax1x.com/2019/03/15/AVPFRP.jpg" alt="AVPFRP.jpg" border="0" />
+
+<p>65536：16位定时器，2<sup>16</sup>+1&#x3D;65535+1&#x3D;65536<br>T：想要设置的中断时间。<br>F<sub>osc</sub>：单片机晶振频率。<br>A：根据<a href="#%E6%8E%A7%E5%88%B6%E5%AF%84%E5%AD%98%E5%99%A8-T4T3M">控制寄存器-T4T3M</a>中<code>T4x12</code>:定时器4速度控制位。12T模式，即CPU时钟12 分频（FOSC&#x2F;12），所以A&#x3D;12；1T模式，即CPU时钟不分频分频（FOSC&#x2F;1），所以A&#x3D;1。<br>THx：高八位初值。把N对256求模。<br>TLx：低八位初值。把N对256求余。<br>例如：24M晶振，12分频，定时10ms。计算得到THx&#x3D;177，TLx&#x3D;224。转换为十六进制是THx&#x3D;0xB1，TLx&#x3D;0xE0</p>
+<img src="https://s2.ax1x.com/2019/03/15/AVit6f.jpg" alt="AVit6f.jpg" border="0" />
+
+<h2 id="范例程序"><a href="#范例程序" class="headerlink" title="范例程序"></a>范例程序</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#include &lt;STC8.H&gt;</span><br><span class="line"></span><br><span class="line">sbit LED=P1^0;</span><br><span class="line"></span><br><span class="line">void TM4_Isr() interrupt 20</span><br><span class="line">&#123;</span><br><span class="line">    LED = !LED;                                 //测试端口</span><br><span class="line">    AUXINTIF &amp;= ~T4IF;                          //清中断标志</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void main()</span><br><span class="line">&#123;</span><br><span class="line">    //晶振频率为24MHz，定时10ms</span><br><span class="line">    T4L = 0xE0;</span><br><span class="line">    T4H = 0xB1;</span><br><span class="line">    T4T3M |= 0x80;                              //启动定时器</span><br><span class="line">    IE2 |= ET4;                                 //使能定时器4中断</span><br><span class="line">    EA = 1;	                                //开启中断</span><br><span class="line"></span><br><span class="line">    while(1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>测试效果有些误差。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AVFNCR.jpg" alt="AVFNCR.jpg" border="0" />
+
+]]></content>
+      <tags>
+        <tag>STC8F</tag>
+        <tag>单片机</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Termux 笔记</title>
+    <url>/2019/02/15/Termux-notes/</url>
+    <content><![CDATA[<p>安装完成后的常用配置记录。</p>
+<span id="more"></span>
+
+<h2 id="基本命令"><a href="#基本命令" class="headerlink" title="基本命令"></a>基本命令</h2><h3 id="pkg命令"><a href="#pkg命令" class="headerlink" title="pkg命令"></a><code>pkg</code>命令</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pkg search &lt;query&gt;              搜索包</span><br><span class="line">pkg install &lt;package&gt;           安装包</span><br><span class="line">pkg uninstall &lt;package&gt;         卸载包</span><br><span class="line">pkg reinstall &lt;package&gt;         重新安装包</span><br><span class="line">pkg update                      更新源</span><br><span class="line">pkg upgrade                     升级软件包</span><br><span class="line">pkg list-all                    列出可供安装的所有包</span><br><span class="line">pkg list-installed              列出已经安装的包</span><br><span class="line">pkg shoe &lt;package&gt;              显示某个包的详细信息</span><br><span class="line">pkg files &lt;package&gt;             显示某个包的相关文件夹路径</span><br></pre></td></tr></table></figure>
+
+<h2 id="目录环境结构"><a href="#目录环境结构" class="headerlink" title="目录环境结构"></a>目录环境结构</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">files</span><br><span class="line">|--home</span><br><span class="line">|--usr</span><br><span class="line">   |--bin</span><br><span class="line">   |--lib</span><br><span class="line">   |--share</span><br><span class="line">   |--var</span><br><span class="line">   |--etc</span><br><span class="line">   |--libexec</span><br><span class="line">   |--tmp</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ echo $HOME</span><br><span class="line">/data/data/com.termux/files/home</span><br><span class="line">$ echo $PREFIX</span><br><span class="line">/data/data/com.termux/files/usr</span><br><span class="line">$ echo $TMPPREFIX</span><br><span class="line">/data/data/com.termux/files/usr/tmp/zsh</span><br></pre></td></tr></table></figure>
+<h2 id="更换国内源"><a href="#更换国内源" class="headerlink" title="更换国内源"></a>更换国内源</h2><p>使用如下命令，然后选择UTSC(中国科技大学)或者其他国内源，空格选中，回车确定：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">termux-change-repo</span><br></pre></td></tr></table></figure>
+
+<p>更换源后需要更新源</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ pkg update</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装基本工具"><a href="#安装基本工具" class="headerlink" title="安装基本工具"></a>安装基本工具</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ pkg update                                    更新源</span><br><span class="line">$ pkg install vim curl wget git unzip unrar     一些基本工具</span><br></pre></td></tr></table></figure>
+<h2 id="Termux优化"><a href="#Termux优化" class="headerlink" title="Termux优化"></a>Termux优化</h2><h3 id="终端配色"><a href="#终端配色" class="headerlink" title="终端配色"></a>终端配色</h3><p>主要使用了<a href="https://github.com/robbyrussell/oh-my-zsh">oh-my-zsh</a>来替代<code>bash</code>作为默认<code>shell</code>。使用一键安装脚本来安装,一步到位,顺便启动了外置存储,可以直接访问SD卡下的目录。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ sh -c &quot;$(curl -fsSL https://github.com/Cabbagec/termux-ohmyzsh/raw/master/install.sh)&quot;</span><br></pre></td></tr></table></figure>
+<p>分别选择<code>背景色</code>和<code>字体</code>，可以参考如下选择：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Enter a number, leave blank to not to change: 14</span><br><span class="line">Enter a number, leave blank to not to change: 6</span><br></pre></td></tr></table></figure>
+<p>想要继续更改挑选配色的话,继续运行脚本来再次筛选：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ ~/termux-ohmyzsh/install.sh</span><br></pre></td></tr></table></figure>
+<p>输入命令<code>exit</code>再回车确认，重启Termux配置生效。</p>
+<h3 id="访问外置储存优化"><a href="#访问外置储存优化" class="headerlink" title="访问外置储存优化"></a>访问外置储存优化</h3><p>执行过上面的<code>zsh</code>一键配置脚本后,并且授予文件访问权限的话,会在家目录生成<code>storage</code>目录，并且生成若干目录，软连接都指向外置存储卡的相应目录。<br>为了方便文件传输,直接在<code>storage</code>目录下创建软链接。<br>创建文件夹软连接<br>QQ</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ ln -s /data/data/com.termux/files/home/storage/shared/tencent/QQfile_recv QQ</span><br></pre></td></tr></table></figure>
+<p>TIM</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ ln -s /data/data/com.termux/files/home/storage/shared/tencent/TIMfile_recv TIM</span><br></pre></td></tr></table></figure>
+<p>微信</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ ln -s /data/data/com.termux/files/home/storage/shared/tencent/MicroMsg/Download Wechat</span><br></pre></td></tr></table></figure>
+<h3 id="oh-my-zsh主题配色"><a href="#oh-my-zsh主题配色" class="headerlink" title="oh-my-zsh主题配色"></a><a href="https://github.com/robbyrussell/oh-my-zsh">oh-my-zsh</a>主题配色</h3><p>编辑<code>.zshrc</code>配置文件</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ vim ~/.zshrc</span><br></pre></td></tr></table></figure>
+<p>第一行<code>ZSH_THEME=&quot;agnoster&quot;</code>，默认是<code>agnoster</code>主题。<br>在~&#x2F;.oh-my-zsh&#x2F;themes目录下放着oh-my-zsh所有的主题配置文件。<br>下面几款主题不错<br>agnoster<br><img src="https://image.3001.net/images/20180501/15251534292438.png" alt="agnoster"><br>robbyrussell<br><img src="https://image.3001.net/images/20180501/15251540733399.png" alt="robbyrussell"><br>jaischeema<br><img src="https://image.3001.net/images/20180501/15251541015433.png" alt="jaischeema"><br>re5et<br><img src="https://image.3001.net/images/20180501/15251541397.png" alt="re5et"><br>junkfood<br><img src="https://image.3001.net/images/20180501/15251541908342.png" alt="junkfood"><br>cloud<br><img src="https://image.3001.net/images/20180501/15251542579462.png" alt="cloud"><br>可以尝试<code>random</code>主题,每打开一个会话配色主题都是随机的。</p>
+<h2 id="修改启动问候语"><a href="#修改启动问候语" class="headerlink" title="修改启动问候语"></a>修改启动问候语</h2><p>编辑问候语文件直接修改问候语：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ vim $PREFIX/etc/motd</span><br></pre></td></tr></table></figure>
+<h2 id="管理员身份"><a href="#管理员身份" class="headerlink" title="管理员身份"></a>管理员身份</h2><h3 id="手机没有root"><a href="#手机没有root" class="headerlink" title="手机没有root"></a>手机没有root</h3><p>利用<code>proot</code>工具来模拟某些需要root的环境。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ pkg install proot</span><br></pre></td></tr></table></figure>
+<p>然后终端下面输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ termux-chroot</span><br></pre></td></tr></table></figure>
+<p>即可模拟<code>root</code>环境<br>在这个<code>proot</code>环境下面,相当于是进入了<code>home</code>目录,可以很方便地进行一些配置。<br><img src="https://image.3001.net/images/20180502/15252406356840.png"><br>在管理员身份下，输入<code>exit</code>可回到普通用户身份。</p>
+<h2 id="安装Nodejs"><a href="#安装Nodejs" class="headerlink" title="安装Nodejs"></a>安装Nodejs</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ pkg install nodejs</span><br></pre></td></tr></table></figure>
+<p>如果报错如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Cannot read property &#x27;length&#x27; of undefined</span><br></pre></td></tr></table></figure>
+<p>修改<code>farm.js</code></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ vim $PREFIX/lib/node_modules/npm/node_modules/worker-farm/lib/farm.js</span><br></pre></td></tr></table></figure>
+<p>尝试将<code>length:</code>后指定一个数字，例如<code>length:4</code></p>
+<h2 id="安装Hexo博客"><a href="#安装Hexo博客" class="headerlink" title="安装Hexo博客"></a>安装Hexo博客</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ npm install hexo-cli -g</span><br><span class="line">$ hexo init Blog</span><br><span class="line">$ cd Blog</span><br><span class="line">$ npm install</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>Termux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Arch Linux 安装记录</title>
+    <url>/2022/11/29/arch-linux-installation-records/</url>
+    <content><![CDATA[<p>笔记本电脑为联想拯救者R9000P，CPU为 AMD Ryzen 7 5800H，GPU为RTX 3060。</p>
+<span id="more"></span>
+
+<h2 id="pacman-命令用法-yay相同"><a href="#pacman-命令用法-yay相同" class="headerlink" title="pacman 命令用法(yay相同)"></a>pacman 命令用法(yay相同)</h2><p>更新系统</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -Syu </span><br></pre></td></tr></table></figure>
+
+<p>安装包</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -Sy 包名</span><br><span class="line">sudo pacman -U  安装本地包，其扩展名为 pkg.tar.gz</span><br></pre></td></tr></table></figure>
+
+<p>删除包</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -R  包名 该命令将只删除包，不包含该包的依赖。</span><br><span class="line">sudo pacman -Rs 包名 在删除包的同时，也将删除其依赖。</span><br><span class="line">sudo pacman -Rd 包名 在删除包时不检查依赖。</span><br></pre></td></tr></table></figure>
+
+<p>搜索包</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -Ss 关键字 这将搜索含关键字的包。</span><br><span class="line">sudo pacman -Qi 包名 查看有关包的信息。</span><br><span class="line">sudo pacman -Ql 包名 列出该包的文件。</span><br></pre></td></tr></table></figure>
+
+<p>其他用法</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -Sw  包名 只下载包，不安装。</span><br><span class="line">pacman -Sc  Pacman 下载的包文件位于 /var/cache/pacman/pkg/ 目录。该命令将清理未安装的包文件。</span><br><span class="line">pacman -Scc 清理所有的缓存文件。</span><br></pre></td></tr></table></figure>
+
+<h2 id="关闭蜂鸣器"><a href="#关闭蜂鸣器" class="headerlink" title="关闭蜂鸣器"></a>关闭蜂鸣器</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">rmmod pcspkr</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置大字体"><a href="#设置大字体" class="headerlink" title="设置大字体"></a>设置大字体</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">setfont /usr/share/kbd/consolefonts/solar24x32.psfu.gz</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试网络连接"><a href="#测试网络连接" class="headerlink" title="测试网络连接"></a>测试网络连接</h2><h3 id="无线网络连接"><a href="#无线网络连接" class="headerlink" title="无线网络连接"></a>无线网络连接</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">iwctl                            #执行iwctl命令，进入交互式命令行</span><br><span class="line">device list                      #列出设备名，比如无线网卡看到叫 wlan0</span><br><span class="line">station wlan0 scan               #用wlan0网卡扫描网络</span><br><span class="line">station wlan0 get-networks       #列出网络</span><br><span class="line">station wlan0 connect 无线网名字   #连接网络名字 输入密码</span><br><span class="line">exit或者quit                      #成功后退出</span><br></pre></td></tr></table></figure>
+<p>如果使用上面命令无法连接就需要使用命令<code>rfkill unblock wifi</code>，然后再重复上面操作。</p>
+<h3 id="网络问题解决方法"><a href="#网络问题解决方法" class="headerlink" title="网络问题解决方法"></a>网络问题解决方法</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ip addr # 查看获取的ip地址</span><br><span class="line">ip link # 查看网络连接</span><br><span class="line">ip route add default via 192.168.1.4 dev enp0s3 # 设置默认网关</span><br><span class="line">ip route del default # 删除默认网关</span><br></pre></td></tr></table></figure>
+
+<p>如果在ping网址时提示<code>Name or service not known</code> 说明未设置DNS，按一下步骤操作：<br>在 <code>vim /etc/systemd/resolved.conf</code> 中的 <code>[Resolve]</code> 后面添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">DNS=192.168.1.4 # 路由器地址</span><br></pre></td></tr></table></figure>
+
+<p>重启服务 <code>systemctl restart systemd-resolved</code></p>
+<h2 id="添加国内镜像源"><a href="#添加国内镜像源" class="headerlink" title="添加国内镜像源"></a>添加国内镜像源</h2><p><code>sudo vim /etc/pacman.d/mirrorlist</code> 添加一个即可。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch</span><br><span class="line">Server = http://mirror.lzu.edu.cn/archlinux/$repo/os/$arch</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置时区"><a href="#设置时区" class="headerlink" title="设置时区"></a>设置时区</h2><p>必须先设置时区然后再使能ntp。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">timedatectl set-timezone Asia/Shanghai</span><br><span class="line">timedatectl set-ntp 1</span><br><span class="line">date</span><br></pre></td></tr></table></figure>
+
+<h2 id="更新密钥环"><a href="#更新密钥环" class="headerlink" title="更新密钥环"></a>更新密钥环</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -Syy</span><br><span class="line">pacman -S archlinux-keyring</span><br></pre></td></tr></table></figure>
+
+<h2 id="分区的创建与格式化"><a href="#分区的创建与格式化" class="headerlink" title="分区的创建与格式化"></a>分区的创建与格式化</h2><p>使用命令 <code>cfdisk /dev/sdx</code> 进行分区，图形化操作，根据需要创建 <code>efi分区</code> 、 <code>交换分区</code> 、 <code>根分区</code>。</p>
+<p>格式化 <code>efi分区(FAT32)</code> 、 <code>交换分区(SWAP)</code> 、 <code>根分区(Btrfs)</code>。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mkfs.fat -F 32 /dev/sdxn</span><br><span class="line">mkswap /dev/sdxn</span><br><span class="line">mkfs.btrfs -L myArch /dev/sdxn</span><br></pre></td></tr></table></figure>
+
+<p>为了创建子卷，我们需要先将 Btrfs 分区挂载到 <code>/mnt</code> 下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mount -t btrfs -o compress=zstd /dev/sdxn /mnt</span><br></pre></td></tr></table></figure>
+<p>创建btrfs子卷，此处创建名为 <code>@</code> 和 <code>@home</code> 的两个子卷。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">btrfs subvolume create /mnt/@      # 创建 / 目录子卷</span><br><span class="line">btrfs subvolume create /mnt/@home  # 创建 /home 目录子卷</span><br></pre></td></tr></table></figure>
+<div class="note danger"><p>为了使用 <code>timeshift</code> 进行创建和恢复快照，此处一定要使用 <code>@</code> 和 <code>@home</code> 这两个名称。</p>
+</div>
+
+<p>查看子卷创建情况：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ btrfs subvolume list -p /mnt</span><br><span class="line">ID 266 gen 2891 parent 5 top level 5 path @</span><br><span class="line">ID 267 gen 2890 parent 5 top level 5 path @home</span><br></pre></td></tr></table></figure>
+
+<p>对 <code>/mnt</code> 进行卸载，以在下一步中对子卷进行挂载：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">umount /mnt</span><br></pre></td></tr></table></figure>
+
+<h2 id="挂载分区"><a href="#挂载分区" class="headerlink" title="挂载分区"></a>挂载分区</h2><div class="tabs" id="fourth-unique-name"><ul class="nav-tabs"><li class="tab active"><a href="#fourth-unique-name-1">btrfs 文件系统</a></li><li class="tab"><a href="#fourth-unique-name-2">ext4 文件系统</a></li></ul><div class="tab-content"><div class="tab-pane active" id="fourth-unique-name-1"><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mount -t btrfs -o subvol=/@,compress=zstd /dev/sdxn /mnt <span class="comment"># 挂载 / 目录</span></span><br><span class="line"><span class="built_in">mkdir</span> /mnt/home                 <span class="comment"># 创建 /home 目录</span></span><br><span class="line">mount -t btrfs -o subvol=/@home,compress=zstd /dev/sdxn /mnt/home <span class="comment"># 挂载 /home 目录</span></span><br><span class="line"><span class="built_in">mkdir</span> -p /mnt/boot/efi          <span class="comment"># 创建 /boot/efi 目录</span></span><br><span class="line">mount /dev/sdxn /mnt/boot/efi   <span class="comment"># 挂载 /boot/efi 目录</span></span><br><span class="line">swapon /dev/sdxn                <span class="comment"># 挂载交换分区</span></span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="fourth-unique-name-2"><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mount /dev/sda2 /mnt</span><br><span class="line"><span class="built_in">mkdir</span> /mnt/home</span><br><span class="line"><span class="built_in">mkdir</span> /mnt/boot</span><br><span class="line">mount /dev/sda1 /mnt/boot</span><br><span class="line">mount /dev/sda3 /mnt/home</span><br></pre></td></tr></table></figure></div></div></div>
+
+<h2 id="安装基本系统"><a href="#安装基本系统" class="headerlink" title="安装基本系统"></a>安装基本系统</h2><p>必须安装的：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacstrap /mnt base base-devel linux linux-firmware</span><br></pre></td></tr></table></figure>
+
+<p>常用的，根据实际需要添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacstrap /mnt dhcpcd iwd vim vi zsh zsh-completions btrfs-progs openssh git wget</span><br></pre></td></tr></table></figure>
+
+<h2 id="生成-fstab-文件"><a href="#生成-fstab-文件" class="headerlink" title="生成 fstab 文件"></a>生成 fstab 文件</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">genfstab -U /mnt &gt; /mnt/etc/fstab</span><br></pre></td></tr></table></figure>
+
+<div class="note danger"><p>如果使用 btrfs 文件系统则必须修改 &#x2F;mnt&#x2F;etc&#x2F;fstab 文件内容，需要删除 <code>/</code> 和 <code>/home</code> 条目中的 <code>subvolid=xxx</code> 参数，否则在使用 timeshift 进行恢复后会无法进入系统。</p>
+</div>
+
+<h2 id="change-root"><a href="#change-root" class="headerlink" title="change root"></a>change root</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">arch-chroot /mnt</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置主机名与时区"><a href="#设置主机名与时区" class="headerlink" title="设置主机名与时区"></a>设置主机名与时区</h2><p><code>vim /etc/hostname</code> 设置主机名为<code>myarch</code></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">myarch</span><br></pre></td></tr></table></figure>
+
+<p><code>vim /etc/hosts</code> 设置ip与域名解析，需要和主机名一致。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">127.0.0.1   localhost</span><br><span class="line">::1         localhost</span><br><span class="line">127.0.1.1   myarch.localdomain	myarch</span><br></pre></td></tr></table></figure>
+
+<p>设置时区</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置-Locale"><a href="#设置-Locale" class="headerlink" title="设置 Locale"></a>设置 Locale</h2><p>编辑 <code>vim /etc/locale.gen</code>，去掉 <code>en_US.UTF-8 UTF-8</code> 以及 <code>zh_CN.UTF-8 UTF-8</code> 行前的注释符号。<br>然后使用如下命令生成 locale：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">locale-gen</span><br></pre></td></tr></table></figure>
+<p>编辑 <code>vim /etc/locale.conf</code> 添加如下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">LANG=en_US.UTF-8</span><br></pre></td></tr></table></figure>
+
+<h2 id="为-root-用户设置密码"><a href="#为-root-用户设置密码" class="headerlink" title="为 root 用户设置密码"></a>为 root 用户设置密码</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">passwd root</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装微码"><a href="#安装微码" class="headerlink" title="安装微码"></a>安装微码</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -S intel-ucode  # Intel</span><br><span class="line">pacman -S amd-ucode    # AMD</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装引导程序"><a href="#安装引导程序" class="headerlink" title="安装引导程序"></a>安装引导程序</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -S grub efibootmgr os-prober</span><br></pre></td></tr></table></figure>
+
+<p>安装 GRUB 到 EFI 分区：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">grub-install --efi-directory=/boot/efi --bootloader-id=ArchLinux</span><br></pre></td></tr></table></figure>
+
+<p>修改 <code>vim /etc/default/grub</code> 文件，打开<code>GRUB_DISABLE_OS_PROBER=false</code>这项，<br>最后使用如下命令生成 GRUB 所需的配置文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">grub-mkconfig -o /boot/grub/grub.cfg</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装完成"><a href="#安装完成" class="headerlink" title="安装完成"></a>安装完成</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">exit            # 退回安装环境</span><br><span class="line">umount -R /mnt  # 卸载新分区</span><br><span class="line">reboot          # 重启</span><br></pre></td></tr></table></figure>
+
+<div class="note info"><p>重启进入系统后，如果需要系统备份，可查看这篇文章 <a href="/2022/11/29/Create-and-restore-btrfs-file-system-snapshots/" title="Btrfs 文件系统快照的创建与恢复">Btrfs 文件系统快照的创建与恢复</a></p>
+</div>
+
+<h2 id="创建非root用户"><a href="#创建非root用户" class="headerlink" title="创建非root用户"></a>创建非root用户</h2><p>创建名为 <code>myusername</code> 的普通用户：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">useradd -m -G wheel -s /bin/bash myusername</span><br></pre></td></tr></table></figure>
+
+<p>设置新用户密码：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">passwd myusername</span><br></pre></td></tr></table></figure>
+
+<p>修改 <code>sudoers</code> 文件，命令如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">EDITOR=vim visudo</span><br></pre></td></tr></table></figure>
+
+<p>将如下所示行前的 <code>#</code> 删除后保存：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#%wheel ALL=(ALL) ALL</span><br></pre></td></tr></table></figure>
+
+<h2 id="开启32位库和archlinuxcn库"><a href="#开启32位库和archlinuxcn库" class="headerlink" title="开启32位库和archlinuxcn库"></a>开启32位库和archlinuxcn库</h2><p>编辑 <code>vim /etc/pacman.conf</code> 文件，将如下两行前的 <code>#</code> 删除即可开启32位库：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#[multilib]</span><br><span class="line">#Include = /etc/pacman.d/mirrorlist</span><br></pre></td></tr></table></figure>
+
+<p>然后在文件末尾加入archlinuxcn源：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[archlinuxcn]</span><br><span class="line">Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch # 中国科学技术大学开源镜像站</span><br></pre></td></tr></table></figure>
+
+<p>保存后运行如下命令更新并安装 <code>archlinuxcn-keyring</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -Syyu</span><br><span class="line">pacman -S archlinuxcn-keyring</span><br><span class="line">pacman -S yay</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装-gnome-桌面"><a href="#安装-gnome-桌面" class="headerlink" title="安装 gnome 桌面"></a>安装 gnome 桌面</h2><div class="note warning"><p>安装桌面环境前必须完成 <a href="#%E5%88%9B%E5%BB%BA%E9%9D%9Eroot%E7%94%A8%E6%88%B7">创建非root用户</a> 和 <a href="#%E5%BC%80%E5%90%AF32%E4%BD%8D%E5%BA%93%E5%92%8Carchlinuxcn%E5%BA%93">开启32位库和archlinuxcn库</a> 这两步。</p>
+</div>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -Syy</span><br><span class="line">pacman -Sy wqy-zenhei gnome gnome-extra </span><br></pre></td></tr></table></figure>
+
+<h2 id="安装-KDE-Plasma-桌面环境"><a href="#安装-KDE-Plasma-桌面环境" class="headerlink" title="安装 KDE Plasma 桌面环境"></a>安装 KDE Plasma 桌面环境</h2><div class="note warning"><p>安装桌面环境前必须完成 <a href="#%E5%88%9B%E5%BB%BA%E9%9D%9Eroot%E7%94%A8%E6%88%B7">创建非root用户</a> 和 <a href="#%E5%BC%80%E5%90%AF32%E4%BD%8D%E5%BA%93%E5%92%8Carchlinuxcn%E5%BA%93">开启32位库和archlinuxcn库</a> 这两步。</p>
+</div>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pacman -S plasma-meta kde-applications-meta</span><br></pre></td></tr></table></figure>
+
+<p>完成后开启 sddm 的开机启动，然后重启系统就可以进入桌面环境：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">systemctl enable sddm</span><br><span class="line">reboot</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装基础软件"><a href="#安装基础软件" class="headerlink" title="安装基础软件"></a>安装基础软件</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -S yay</span><br><span class="line">sudo pacman -S ntfs-3g # 使系统可以识别 NTFS 格式的硬盘</span><br><span class="line">sudo pacman -S adobe-source-han-serif-cn-fonts wqy-zenhei # 安装几个开源中文字体。</span><br><span class="line">sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra # 安装谷歌开源字体及表情</span><br><span class="line">sudo pacman -S flameshot vlc # 截屏 视频播放器</span><br><span class="line">yay -S visual-studio-code-bin</span><br><span class="line">yay -S microsoft-edge-stable-bin</span><br><span class="line">yay -S wps-office-cn ttf-wps-fonts wps-office-mui-zh-cn </span><br><span class="line">yay -S yesplaymusic # 音乐播放器</span><br><span class="line">yay -S tabby-bin</span><br></pre></td></tr></table></figure>
+
+<h2 id="启动蓝牙"><a href="#启动蓝牙" class="headerlink" title="启动蓝牙"></a>启动蓝牙</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -S bluez bluez-utils</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装输入法"><a href="#安装输入法" class="headerlink" title="安装输入法"></a>安装输入法</h2><p>安装必要软件包</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -S fcitx5-im # 输入法基础包组</span><br><span class="line">sudo pacman -S fcitx5-chinese-addons # 官方中文输入引擎</span><br><span class="line">sudo pacman -S fcitx5-material-color # 输入法主题</span><br></pre></td></tr></table></figure>
+
+<p>添加环境变量 <code>sudo vim /etc/environment</code></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">GTK_IM_MODULE=fcitx</span><br><span class="line">QT_IM_MODULE=fcitx</span><br><span class="line">XMODIFIERS=@im=fcitx</span><br><span class="line">SDL_IM_MODULE=fcitx</span><br><span class="line">GLFW_IM_MODULE=ibus</span><br></pre></td></tr></table></figure>
+
+<p>打开 <code>系统设置</code> &gt; <code>区域设置</code> &gt; <code>输入法</code> 然后点击 <code>运行 Fcitx</code> </p>
+<h3 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a>方案一</h3><p>使用 <code>fcitx5-chinese-addons</code> 软件包中的双拼输入法， <code>添加输入法</code> &gt; <code>Shuangpin</code> &gt; <code>添加</code> 即可。</p>
+<h3 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a>方案二</h3><p>首先必须先按照 <a href="https://arch.icekylin.online/advanced/optional-cfg-1.html#%F0%9F%8D%80%EF%B8%8F-%E8%BE%93%E5%85%A5%E6%B3%95">输入法教程</a> 安装好 <a href="https://github.com/fkxxyz/rime-cloverpinyin">🍀️四叶草拼音输入方案</a>。</p>
+<p>然后从这个 <a href="https://github.com/so1ar/rime-cloverpinyin">rime-cloverpinyin</a> 项目中下载 <code>clover-flypy.schema.yaml</code> 文件，放到目录 <code>~/.local/share/fcitx5/rime</code> 下面，或者直接使用下面命令下载到指定目录：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">wget -P ~/.local/share/fcitx5/rime https://raw.githubusercontent.com/so1ar/rime-cloverpinyin/main/src/clover-flypy.schema.yaml</span><br></pre></td></tr></table></figure>
+
+<p>然后修改 <code>default.custom.yaml</code> 文件中的 <code>clover</code> 为 <code>clover-flypy</code> 后重新部署即可。</p>
+<h2 id="安装-powerlevel10k"><a href="#安装-powerlevel10k" class="headerlink" title="安装 powerlevel10k"></a>安装 powerlevel10k</h2><p>安装 zim 框架</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl -fsSL https://raw.githubusercontent.com/zimfw/install/master/install.zsh | zsh</span><br></pre></td></tr></table></figure>
+
+<p>编辑配置文件<code>vim ~/.zimrc</code>，在最后添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">zmodule romkatv/powerlevel10k --use degit</span><br></pre></td></tr></table></figure>
+
+<p>然后运行<code>zimfw install</code>进行安装。<br>运行 <code>p10k configure</code> 进行配置。需要下面这4个字体：</p>
+<p><a href="https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf">MesloLGS NF Regular.ttf</a><br><a href="https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf">MesloLGS NF Bold.ttf</a><br><a href="https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf">MesloLGS NF Italic.ttf</a><br><a href="https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf">MesloLGS NF Bold Italic.ttf</a>  </p>
+<h2 id="显卡驱动"><a href="#显卡驱动" class="headerlink" title="显卡驱动"></a>显卡驱动</h2><div class="note warning"><p>安装显卡驱动前建议先按照这篇文章对系统进行备份 <a href="/2022/11/29/Create-and-restore-btrfs-file-system-snapshots/" title="Btrfs 文件系统快照的创建与恢复">Btrfs 文件系统快照的创建与恢复</a></p>
+</div>
+
+<h3 id="AMD-核心显卡"><a href="#AMD-核心显卡" class="headerlink" title="AMD 核心显卡"></a>AMD 核心显卡</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -S mesa lib32-mesa xf86-video-amdgpu vulkan-radeon lib32-vulkan-radeon</span><br></pre></td></tr></table></figure>
+
+<h3 id="NVIDIA-独立显卡"><a href="#NVIDIA-独立显卡" class="headerlink" title="NVIDIA 独立显卡"></a>NVIDIA 独立显卡</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo pacman -S nvidia nvidia-settings lib32-nvidia-utils</span><br></pre></td></tr></table></figure>
+<div class="note warning"><p>安装完成后一定要 <strong>重启系统</strong>，然后运行 <code>nvidia-smi</code> 查看是否报错。</p>
+</div>
+
+<p><code>nvidia-smi</code> 输出报错的解决办法是运行如下命令然后<strong>重启系统</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo mkinitcpio -p linux</span><br></pre></td></tr></table></figure>
+<p>如果 <code>nvidia-smi</code> 有正常输出说明 NVIDIA 独立显卡驱动安装成功可进行下一步。</p>
+<h3 id="核显-与-独显-切换"><a href="#核显-与-独显-切换" class="headerlink" title="核显 与 独显 切换"></a>核显 与 独显 切换</h3><p>安装如下软件：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">yay -S optimus-manager optimus-manager-qt # 主程序 和 图形界面</span><br></pre></td></tr></table></figure>
+<p>设置自动启动</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo systemctl enable optimus-manager.service</span><br></pre></td></tr></table></figure>
+<p>重启后在菜单栏启动 optimus-manager 图形界面，在其中可设置图形界面开机自启。</p>
+<h2 id="再生龙恢复后无法启动"><a href="#再生龙恢复后无法启动" class="headerlink" title="再生龙恢复后无法启动"></a>再生龙恢复后无法启动</h2><ol>
+<li><p>使用命令<code>ls</code>查看分区，会出现如下字样：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(hd0) (hd0,msdos9) (hd0,msdos8) (hd0,msdos7) (hd0,msdos6) (hd0,msdos5) (hd0,msdos2) (hd0,msdos1)</span><br></pre></td></tr></table></figure>
+<p>注：上面是我的分区设备，每个人可能不一样，但原理都是一样的。</p>
+</li>
+<li><p>寻找ubuntu所在分区：（就是寻找你的Linux系统是装在以上哪个分区里）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">grub rescue&gt; ls (hd0,msdos1)/</span><br></pre></td></tr></table></figure>
+<p>若出现的是你的ubuntu主文件夹下的文件夹和文件的名字，那就是的要找的分区了。</p>
+</li>
+<li><p>修改启动分区：<br>（假如你找到的启动分区是hd0,msdos8）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">grub rescue &gt; set root=(hd0,msdos8)</span><br><span class="line">grub rescue &gt; set prefix=(hd0,msdos8)/boot/grub</span><br><span class="line">grub rescue &gt; insmod normal                            //启动normal启动</span><br><span class="line">grub rescue &gt; normal</span><br></pre></td></tr></table></figure>
+<p>之后你就会看到熟悉的启动菜单栏了</p>
+</li>
+<li><p>进入系统后运行以下命令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo update-grub</span><br><span class="line">sudo grub-install</span><br></pre></td></tr></table></figure>
+<p>如果出现这个错误<code>/usr/bin/grub-probe：警告： 未知的设备类型 nvme1n1.</code>，可以将<code>/etc/grub.d/60_memtest86+</code>文件删除</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo rm -rf /etc/grub.d/60_memtest86+</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Eclipse-安装记录"><a href="#Eclipse-安装记录" class="headerlink" title="Eclipse 安装记录"></a>Eclipse 安装记录</h2><p><a href="https://www.eclipse.org/downloads/packages/">Eclipse下载地址</a> 下载对应平台软件。</p>
+<h3 id="汉化"><a href="#汉化" class="headerlink" title="汉化"></a>汉化</h3><p>打开 eclipse 软件找到 ‘Help’ &gt; ‘Install new software…’</p>
+<p>然后添加 <code>https://download.eclipse.org/technology/babel/update-site/latest/</code></p>
+<p>到底中文简体安装。</p>
+<p>如果启动还是英文，需要在启动时添加 <code>-nl zh</code>。</p>
+<h2 id="重启到-BISO"><a href="#重启到-BISO" class="headerlink" title="重启到 BISO"></a>重启到 BISO</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo systemctl reboot --firmware-setup</span><br></pre></td></tr></table></figure>
+
+<h2 id="自动挂载ntfs"><a href="#自动挂载ntfs" class="headerlink" title="自动挂载ntfs"></a>自动挂载ntfs</h2><p><code>sudo vim /etc/fstab</code> </p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/dev/nvme1n1p1  /run/media/lituo/Data2          ntfs    noatime,auto,rw,noexec,async,user,suid 0 2</span><br><span class="line">/dev/nvme0n1p3  /run/media/lituo/Data           ntfs    noatime,auto,rw,noexec,async,user,suid 0 2</span><br><span class="line">/dev/nvme0n1p2  /run/media/lituo/windows        ntfs    noatime,auto,rw,noexec,async,user,suid 0 2</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>Linux</tag>
+        <tag>Arch Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Vscode 配置 ESP-IDF 扩展问题解决方法</title>
+    <url>/2023/10/27/Vscode-to-configure-the-esp-idf-extension/</url>
+    <content><![CDATA[<h2 id="修改pip源"><a href="#修改pip源" class="headerlink" title="修改pip源"></a>修改pip源</h2><p>新建文件夹 <code>mkdir ~/.pip</code> ，然后创创建文件 <code>vim ~/.pip/pip.conf</code> 添加如下内容</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[global]</span><br><span class="line">index-url = https://pypi.tuna.tsinghua.edu.cn/simple</span><br><span class="line">[install]</span><br><span class="line">trusted-host = https://pypi.tuna.tsinghua.edu.cn</span><br></pre></td></tr></table></figure>
+
+<h2 id="串口权限"><a href="#串口权限" class="headerlink" title="串口权限"></a>串口权限</h2><p>Ubuntu 系统</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo usermod -a -G dialout $USER</span><br></pre></td></tr></table></figure>
+
+<p>ArchLinux</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo usermod -a -G uucp $USER</span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+  </entry>
+  <entry>
+    <title>Hexo 安装和配置</title>
+    <url>/2023/10/27/Hexo-installation-configuration-issues/</url>
+    <content><![CDATA[<h2 id="安装node版本管理工具nvm"><a href="#安装node版本管理工具nvm" class="headerlink" title="安装node版本管理工具nvm"></a>安装node版本管理工具nvm</h2><p>地址：<a href="https://github.com/nvm-sh/nvm">https://github.com/nvm-sh/nvm</a></p>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash</span><br></pre></td></tr></table></figure>
+
+<p>或</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash</span><br></pre></td></tr></table></figure>
+
+<p>如果没有python的话就添加软链接</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo ln -s /usr/bin/python3 /usr/bin/python</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>command -v nvm</code> 命令查看是否安装成功，如果没有的话就运行 <code>source ~/.bashrc</code></p>
+<p>查看可安装的node版本</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nvm ls-remote</span><br></pre></td></tr></table></figure>
+
+<p>安装指定版本</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nvm install v18.18.2</span><br></pre></td></tr></table></figure>
+
+<p>查看已安装版本</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nvm list</span><br></pre></td></tr></table></figure>
+
+<p>使用已安装的指定版本</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nvm use v18.18.2</span><br></pre></td></tr></table></figure>
+
+<p>设置默认使用的版本</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nvm alias default v18.18.2</span><br></pre></td></tr></table></figure>
+
+<p>查看指定版本安装位置</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nvm which v18.18.2</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装Hexo"><a href="#安装Hexo" class="headerlink" title="安装Hexo"></a>安装Hexo</h2><p>修改npm源</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm config set registry https://registry.npmmirror.com/</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+]]></content>
+  </entry>
+</search>

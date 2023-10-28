@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/safari-pinned-tab.svg" color="#222">
+  <meta name="google-site-verification" content="ey_3C-fgsck0u0qJGJ-A7KOD00Bdy6ImGEMleXSqPZE">
+  <meta name="msvalidate.01" content="612F4060AE8753C8582C6F2B5CC916A0">
+  <meta name="baidu-site-verification" content="code-khgz8SVdHC">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.lituo.xyz","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"manual"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="本篇文章介绍STC8F系列单片机。具体型号是STC8F2K08S2，主要介绍定时器的使用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="STC8F系列单片机定时器学习">
+<meta property="og:url" content="https://blog.lituo.xyz/2019/03/15/STC8F-Timer-Learning/index.html">
+<meta property="og:site_name" content="Tour">
+<meta property="og:description" content="本篇文章介绍STC8F系列单片机。具体型号是STC8F2K08S2，主要介绍定时器的使用。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AELH6s.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AEOY4S.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AEjYlQ.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AEjLnA.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AEjbXd.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AEjH6H.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AEL3YF.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AVPFRP.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AVit6f.jpg">
+<meta property="og:image" content="https://s2.ax1x.com/2019/03/15/AVFNCR.jpg">
+<meta property="article:published_time" content="2019-03-15T09:20:33.000Z">
+<meta property="article:modified_time" content="2023-10-28T02:15:14.092Z">
+<meta property="article:author" content="李拓">
+<meta property="article:tag" content="STC8F">
+<meta property="article:tag" content="单片机">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s2.ax1x.com/2019/03/15/AELH6s.jpg">
+
+
+<link rel="canonical" href="https://blog.lituo.xyz/2019/03/15/STC8F-Timer-Learning/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.lituo.xyz/2019/03/15/STC8F-Timer-Learning/","path":"2019/03/15/STC8F-Timer-Learning/","title":"STC8F系列单片机定时器学习"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>STC8F系列单片机定时器学习 | Tour</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Tour</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习笔记</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Timer4"><span class="nav-number">1.</span> <span class="nav-text">Timer4</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A7%E5%88%B6%E5%AF%84%E5%AD%98%E5%99%A8-T4T3M"><span class="nav-number">1.1.</span> <span class="nav-text">控制寄存器-T4T3M</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E6%A0%87%E5%BF%97%E8%BE%85%E5%8A%A9%E5%AF%84%E5%AD%98%E5%99%A8-UXINTIF"><span class="nav-number">1.2.</span> <span class="nav-text">中断标志辅助寄存器-UXINTIF</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E4%BD%BF%E8%83%BD%E5%AF%84%E5%AD%98%E5%99%A8-IE"><span class="nav-number">1.3.</span> <span class="nav-text">中断使能寄存器-IE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E4%BD%BF%E8%83%BD%E5%AF%84%E5%AD%98%E5%99%A82-IE2"><span class="nav-number">1.4.</span> <span class="nav-text">中断使能寄存器2-IE2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.5.</span> <span class="nav-text">工作模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%99%A8%E5%88%9D%E5%80%BC%E8%AE%A1%E7%AE%97"><span class="nav-number">1.6.</span> <span class="nav-text">定时器初值计算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8C%83%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="nav-number">1.7.</span> <span class="nav-text">范例程序</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="李拓"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">李拓</p>
+  <div class="site-description" itemprop="description">学习笔记</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lituo666" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lituo666" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:lituo7516@gmail.com" title="E-Mail → mailto:lituo7516@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.lituo.xyz/2019/03/15/STC8F-Timer-Learning/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="李拓">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tour">
+      <meta itemprop="description" content="学习笔记">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="STC8F系列单片机定时器学习 | Tour">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          STC8F系列单片机定时器学习
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-03-15 17:20:33" itemprop="dateCreated datePublished" datetime="2019-03-15T17:20:33+08:00">2019-03-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-10-28 10:15:14" itemprop="dateModified" datetime="2023-10-28T10:15:14+08:00">2023-10-28</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>本篇文章介绍STC8F系列单片机。具体型号是STC8F2K08S2，主要介绍定时器的使用。</p>
+<span id="more"></span>
+
+<p>由于STC8F添加了很多特殊寄存器，所以请先按下图操作</p>
+<img src="https://s2.ax1x.com/2019/03/15/AELH6s.jpg" alt="AELH6s.jpg" border="0" />
+
+<p>然后写程序时，不需要写<code>#include &lt;reg51.h&gt;</code>而是写<code>#include &lt;stc8.h&gt;</code>,这个头文件已经将特殊功能寄存器全部定义好了。</p>
+<h1 id="Timer4"><a href="#Timer4" class="headerlink" title="Timer4"></a>Timer4</h1><p>Timer4，定时器&#x2F;计数器。</p>
+<h2 id="控制寄存器-T4T3M"><a href="#控制寄存器-T4T3M" class="headerlink" title="控制寄存器-T4T3M"></a>控制寄存器-T4T3M</h2><p>不支持位寻址，复位值[0000,0000]，详细定义请看下图。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEOY4S.jpg" alt="AEOY4S.jpg" border="0" />
+
+<h2 id="中断标志辅助寄存器-UXINTIF"><a href="#中断标志辅助寄存器-UXINTIF" class="headerlink" title="中断标志辅助寄存器-UXINTIF"></a>中断标志辅助寄存器-UXINTIF</h2><p>不支持位寻址，详细定义请看下图。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEjYlQ.jpg" alt="AEjYlQ.jpg" border="0" />
+
+<h2 id="中断使能寄存器-IE"><a href="#中断使能寄存器-IE" class="headerlink" title="中断使能寄存器-IE"></a>中断使能寄存器-IE</h2><p>可位寻址，详细定义请看下图。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEjLnA.jpg" alt="AEjLnA.jpg" border="0" />
+
+<h2 id="中断使能寄存器2-IE2"><a href="#中断使能寄存器2-IE2" class="headerlink" title="中断使能寄存器2-IE2"></a>中断使能寄存器2-IE2</h2><p>不支持位寻址，详细定义请看下图。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEjbXd.jpg" alt="AEjbXd.jpg" border="0" />
+
+<img src="https://s2.ax1x.com/2019/03/15/AEjH6H.jpg" alt="AEjH6H.jpg" border="0" />
+
+<h2 id="工作模式"><a href="#工作模式" class="headerlink" title="工作模式"></a>工作模式</h2><p>定时器&#x2F;计数器4的工作模式固定为 16 位重载模式。<br>T4L和T4H组合成为一个16位寄存器，T4L为低字节，T4H 为高字节。当[T4H,T4L]中的16 位计数值溢出时，系统会自动将内部16 位重载寄存器中的重载值装入[T4H,T4L]中。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AEL3YF.jpg" alt="AEL3YF.jpg" border="0" />
+
+<h2 id="定时器初值计算"><a href="#定时器初值计算" class="headerlink" title="定时器初值计算"></a>定时器初值计算</h2><p>计算公式：</p>
+<img src="https://s2.ax1x.com/2019/03/15/AVPFRP.jpg" alt="AVPFRP.jpg" border="0" />
+
+<p>65536：16位定时器，2<sup>16</sup>+1&#x3D;65535+1&#x3D;65536<br>T：想要设置的中断时间。<br>F<sub>osc</sub>：单片机晶振频率。<br>A：根据<a href="#%E6%8E%A7%E5%88%B6%E5%AF%84%E5%AD%98%E5%99%A8-T4T3M">控制寄存器-T4T3M</a>中<code>T4x12</code>:定时器4速度控制位。12T模式，即CPU时钟12 分频（FOSC&#x2F;12），所以A&#x3D;12；1T模式，即CPU时钟不分频分频（FOSC&#x2F;1），所以A&#x3D;1。<br>THx：高八位初值。把N对256求模。<br>TLx：低八位初值。把N对256求余。<br>例如：24M晶振，12分频，定时10ms。计算得到THx&#x3D;177，TLx&#x3D;224。转换为十六进制是THx&#x3D;0xB1，TLx&#x3D;0xE0</p>
+<img src="https://s2.ax1x.com/2019/03/15/AVit6f.jpg" alt="AVit6f.jpg" border="0" />
+
+<h2 id="范例程序"><a href="#范例程序" class="headerlink" title="范例程序"></a>范例程序</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;STC8.H&gt;</span><br><span class="line"></span><br><span class="line">sbit LED=P1^0;</span><br><span class="line"></span><br><span class="line">void TM4_Isr() interrupt 20</span><br><span class="line">&#123;</span><br><span class="line">    LED = !LED;                                 //测试端口</span><br><span class="line">    AUXINTIF &amp;= ~T4IF;                          //清中断标志</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void main()</span><br><span class="line">&#123;</span><br><span class="line">    //晶振频率为24MHz，定时10ms</span><br><span class="line">    T4L = 0xE0;</span><br><span class="line">    T4H = 0xB1;</span><br><span class="line">    T4T3M |= 0x80;                              //启动定时器</span><br><span class="line">    IE2 |= ET4;                                 //使能定时器4中断</span><br><span class="line">    EA = 1;	                                //开启中断</span><br><span class="line"></span><br><span class="line">    while(1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>测试效果有些误差。</p>
+<img src="https://s2.ax1x.com/2019/03/15/AVFNCR.jpg" alt="AVFNCR.jpg" border="0" />
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="李拓 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="李拓 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>李拓
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://blog.lituo.xyz/2019/03/15/STC8F-Timer-Learning/" title="STC8F系列单片机定时器学习">https://blog.lituo.xyz/2019/03/15/STC8F-Timer-Learning/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/STC8F/" rel="tag"><i class="fa fa-tag"></i> STC8F</a>
+              <a href="/tags/%E5%8D%95%E7%89%87%E6%9C%BA/" rel="tag"><i class="fa fa-tag"></i> 单片机</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/02/25/FiveM-Server-Setup-Windows/" rel="prev" title="FiveM服务器搭建">
+                  <i class="fa fa-chevron-left"></i> FiveM服务器搭建
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2019/04/11/FFmpeg-tools-use/" rel="next" title="音视频处理软件FFmpeg使用记录">
+                  音视频处理软件FFmpeg使用记录 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="lv-container" data-id="city" data-uid="MTAyMC81NzcxMS8zNDE3NA=="></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart-pulse"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">李拓</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+<script src="/js/third-party/comments/livere.js"></script>
+
+</body>
+</html>

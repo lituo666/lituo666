@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/safari-pinned-tab.svg" color="#222">
+  <meta name="google-site-verification" content="ey_3C-fgsck0u0qJGJ-A7KOD00Bdy6ImGEMleXSqPZE">
+  <meta name="msvalidate.01" content="612F4060AE8753C8582C6F2B5CC916A0">
+  <meta name="baidu-site-verification" content="code-khgz8SVdHC">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.lituo.xyz","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"manual"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="笔记本电脑为联想拯救者R9000P，CPU为 AMD Ryzen 7 5800H，GPU为RTX 3060。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Arch Linux 安装记录">
+<meta property="og:url" content="https://blog.lituo.xyz/2022/11/29/arch-linux-installation-records/index.html">
+<meta property="og:site_name" content="Tour">
+<meta property="og:description" content="笔记本电脑为联想拯救者R9000P，CPU为 AMD Ryzen 7 5800H，GPU为RTX 3060。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-29T08:24:34.000Z">
+<meta property="article:modified_time" content="2023-10-28T02:15:14.092Z">
+<meta property="article:author" content="李拓">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Arch Linux">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.lituo.xyz/2022/11/29/arch-linux-installation-records/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.lituo.xyz/2022/11/29/arch-linux-installation-records/","path":"2022/11/29/arch-linux-installation-records/","title":"Arch Linux 安装记录"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Arch Linux 安装记录 | Tour</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Tour</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习笔记</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#pacman-%E5%91%BD%E4%BB%A4%E7%94%A8%E6%B3%95-yay%E7%9B%B8%E5%90%8C"><span class="nav-number">1.</span> <span class="nav-text">pacman 命令用法(yay相同)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%97%AD%E8%9C%82%E9%B8%A3%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">关闭蜂鸣器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E5%A4%A7%E5%AD%97%E4%BD%93"><span class="nav-number">3.</span> <span class="nav-text">设置大字体</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5"><span class="nav-number">4.</span> <span class="nav-text">测试网络连接</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5"><span class="nav-number">4.1.</span> <span class="nav-text">无线网络连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="nav-number">4.2.</span> <span class="nav-text">网络问题解决方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%9B%BD%E5%86%85%E9%95%9C%E5%83%8F%E6%BA%90"><span class="nav-number">5.</span> <span class="nav-text">添加国内镜像源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E6%97%B6%E5%8C%BA"><span class="nav-number">6.</span> <span class="nav-text">设置时区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E5%AF%86%E9%92%A5%E7%8E%AF"><span class="nav-number">7.</span> <span class="nav-text">更新密钥环</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%8C%BA%E7%9A%84%E5%88%9B%E5%BB%BA%E4%B8%8E%E6%A0%BC%E5%BC%8F%E5%8C%96"><span class="nav-number">8.</span> <span class="nav-text">分区的创建与格式化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%BD%BD%E5%88%86%E5%8C%BA"><span class="nav-number">9.</span> <span class="nav-text">挂载分区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%9F%BA%E6%9C%AC%E7%B3%BB%E7%BB%9F"><span class="nav-number">10.</span> <span class="nav-text">安装基本系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E6%88%90-fstab-%E6%96%87%E4%BB%B6"><span class="nav-number">11.</span> <span class="nav-text">生成 fstab 文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#change-root"><span class="nav-number">12.</span> <span class="nav-text">change root</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E4%B8%BB%E6%9C%BA%E5%90%8D%E4%B8%8E%E6%97%B6%E5%8C%BA"><span class="nav-number">13.</span> <span class="nav-text">设置主机名与时区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE-Locale"><span class="nav-number">14.</span> <span class="nav-text">设置 Locale</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA-root-%E7%94%A8%E6%88%B7%E8%AE%BE%E7%BD%AE%E5%AF%86%E7%A0%81"><span class="nav-number">15.</span> <span class="nav-text">为 root 用户设置密码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%BE%AE%E7%A0%81"><span class="nav-number">16.</span> <span class="nav-text">安装微码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F"><span class="nav-number">17.</span> <span class="nav-text">安装引导程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%AE%8C%E6%88%90"><span class="nav-number">18.</span> <span class="nav-text">安装完成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E9%9D%9Eroot%E7%94%A8%E6%88%B7"><span class="nav-number">19.</span> <span class="nav-text">创建非root用户</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%90%AF32%E4%BD%8D%E5%BA%93%E5%92%8Carchlinuxcn%E5%BA%93"><span class="nav-number">20.</span> <span class="nav-text">开启32位库和archlinuxcn库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-gnome-%E6%A1%8C%E9%9D%A2"><span class="nav-number">21.</span> <span class="nav-text">安装 gnome 桌面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-KDE-Plasma-%E6%A1%8C%E9%9D%A2%E7%8E%AF%E5%A2%83"><span class="nav-number">22.</span> <span class="nav-text">安装 KDE Plasma 桌面环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%9F%BA%E7%A1%80%E8%BD%AF%E4%BB%B6"><span class="nav-number">23.</span> <span class="nav-text">安装基础软件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E8%93%9D%E7%89%99"><span class="nav-number">24.</span> <span class="nav-text">启动蓝牙</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E8%BE%93%E5%85%A5%E6%B3%95"><span class="nav-number">25.</span> <span class="nav-text">安装输入法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%B8%80"><span class="nav-number">25.1.</span> <span class="nav-text">方案一</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%BA%8C"><span class="nav-number">25.2.</span> <span class="nav-text">方案二</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-powerlevel10k"><span class="nav-number">26.</span> <span class="nav-text">安装 powerlevel10k</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%BE%E5%8D%A1%E9%A9%B1%E5%8A%A8"><span class="nav-number">27.</span> <span class="nav-text">显卡驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AMD-%E6%A0%B8%E5%BF%83%E6%98%BE%E5%8D%A1"><span class="nav-number">27.1.</span> <span class="nav-text">AMD 核心显卡</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NVIDIA-%E7%8B%AC%E7%AB%8B%E6%98%BE%E5%8D%A1"><span class="nav-number">27.2.</span> <span class="nav-text">NVIDIA 独立显卡</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E6%98%BE-%E4%B8%8E-%E7%8B%AC%E6%98%BE-%E5%88%87%E6%8D%A2"><span class="nav-number">27.3.</span> <span class="nav-text">核显 与 独显 切换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%8D%E7%94%9F%E9%BE%99%E6%81%A2%E5%A4%8D%E5%90%8E%E6%97%A0%E6%B3%95%E5%90%AF%E5%8A%A8"><span class="nav-number">28.</span> <span class="nav-text">再生龙恢复后无法启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Eclipse-%E5%AE%89%E8%A3%85%E8%AE%B0%E5%BD%95"><span class="nav-number">29.</span> <span class="nav-text">Eclipse 安装记录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B1%89%E5%8C%96"><span class="nav-number">29.1.</span> <span class="nav-text">汉化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%90%AF%E5%88%B0-BISO"><span class="nav-number">30.</span> <span class="nav-text">重启到 BISO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E6%8C%82%E8%BD%BDntfs"><span class="nav-number">31.</span> <span class="nav-text">自动挂载ntfs</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="李拓"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">李拓</p>
+  <div class="site-description" itemprop="description">学习笔记</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lituo666" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lituo666" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:lituo7516@gmail.com" title="E-Mail → mailto:lituo7516@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.lituo.xyz/2022/11/29/arch-linux-installation-records/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="李拓">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tour">
+      <meta itemprop="description" content="学习笔记">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Arch Linux 安装记录 | Tour">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Arch Linux 安装记录
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-11-29 16:24:34" itemprop="dateCreated datePublished" datetime="2022-11-29T16:24:34+08:00">2022-11-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-10-28 10:15:14" itemprop="dateModified" datetime="2023-10-28T10:15:14+08:00">2023-10-28</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>笔记本电脑为联想拯救者R9000P，CPU为 AMD Ryzen 7 5800H，GPU为RTX 3060。</p>
+<span id="more"></span>
+
+<h2 id="pacman-命令用法-yay相同"><a href="#pacman-命令用法-yay相同" class="headerlink" title="pacman 命令用法(yay相同)"></a>pacman 命令用法(yay相同)</h2><p>更新系统</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -Syu </span><br></pre></td></tr></table></figure>
+
+<p>安装包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -Sy 包名</span><br><span class="line">sudo pacman -U  安装本地包，其扩展名为 pkg.tar.gz</span><br></pre></td></tr></table></figure>
+
+<p>删除包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -R  包名 该命令将只删除包，不包含该包的依赖。</span><br><span class="line">sudo pacman -Rs 包名 在删除包的同时，也将删除其依赖。</span><br><span class="line">sudo pacman -Rd 包名 在删除包时不检查依赖。</span><br></pre></td></tr></table></figure>
+
+<p>搜索包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -Ss 关键字 这将搜索含关键字的包。</span><br><span class="line">sudo pacman -Qi 包名 查看有关包的信息。</span><br><span class="line">sudo pacman -Ql 包名 列出该包的文件。</span><br></pre></td></tr></table></figure>
+
+<p>其他用法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pacman -Sw  包名 只下载包，不安装。</span><br><span class="line">pacman -Sc  Pacman 下载的包文件位于 /var/cache/pacman/pkg/ 目录。该命令将清理未安装的包文件。</span><br><span class="line">pacman -Scc 清理所有的缓存文件。</span><br></pre></td></tr></table></figure>
+
+<h2 id="关闭蜂鸣器"><a href="#关闭蜂鸣器" class="headerlink" title="关闭蜂鸣器"></a>关闭蜂鸣器</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rmmod pcspkr</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置大字体"><a href="#设置大字体" class="headerlink" title="设置大字体"></a>设置大字体</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfont /usr/share/kbd/consolefonts/solar24x32.psfu.gz</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试网络连接"><a href="#测试网络连接" class="headerlink" title="测试网络连接"></a>测试网络连接</h2><h3 id="无线网络连接"><a href="#无线网络连接" class="headerlink" title="无线网络连接"></a>无线网络连接</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">iwctl                            #执行iwctl命令，进入交互式命令行</span><br><span class="line">device list                      #列出设备名，比如无线网卡看到叫 wlan0</span><br><span class="line">station wlan0 scan               #用wlan0网卡扫描网络</span><br><span class="line">station wlan0 get-networks       #列出网络</span><br><span class="line">station wlan0 connect 无线网名字   #连接网络名字 输入密码</span><br><span class="line">exit或者quit                      #成功后退出</span><br></pre></td></tr></table></figure>
+<p>如果使用上面命令无法连接就需要使用命令<code>rfkill unblock wifi</code>，然后再重复上面操作。</p>
+<h3 id="网络问题解决方法"><a href="#网络问题解决方法" class="headerlink" title="网络问题解决方法"></a>网络问题解决方法</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ip addr # 查看获取的ip地址</span><br><span class="line">ip link # 查看网络连接</span><br><span class="line">ip route add default via 192.168.1.4 dev enp0s3 # 设置默认网关</span><br><span class="line">ip route del default # 删除默认网关</span><br></pre></td></tr></table></figure>
+
+<p>如果在ping网址时提示<code>Name or service not known</code> 说明未设置DNS，按一下步骤操作：<br>在 <code>vim /etc/systemd/resolved.conf</code> 中的 <code>[Resolve]</code> 后面添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DNS=192.168.1.4 # 路由器地址</span><br></pre></td></tr></table></figure>
+
+<p>重启服务 <code>systemctl restart systemd-resolved</code></p>
+<h2 id="添加国内镜像源"><a href="#添加国内镜像源" class="headerlink" title="添加国内镜像源"></a>添加国内镜像源</h2><p><code>sudo vim /etc/pacman.d/mirrorlist</code> 添加一个即可。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch</span><br><span class="line">Server = http://mirror.lzu.edu.cn/archlinux/$repo/os/$arch</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置时区"><a href="#设置时区" class="headerlink" title="设置时区"></a>设置时区</h2><p>必须先设置时区然后再使能ntp。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">timedatectl set-timezone Asia/Shanghai</span><br><span class="line">timedatectl set-ntp 1</span><br><span class="line">date</span><br></pre></td></tr></table></figure>
+
+<h2 id="更新密钥环"><a href="#更新密钥环" class="headerlink" title="更新密钥环"></a>更新密钥环</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pacman -Syy</span><br><span class="line">pacman -S archlinux-keyring</span><br></pre></td></tr></table></figure>
+
+<h2 id="分区的创建与格式化"><a href="#分区的创建与格式化" class="headerlink" title="分区的创建与格式化"></a>分区的创建与格式化</h2><p>使用命令 <code>cfdisk /dev/sdx</code> 进行分区，图形化操作，根据需要创建 <code>efi分区</code> 、 <code>交换分区</code> 、 <code>根分区</code>。</p>
+<p>格式化 <code>efi分区(FAT32)</code> 、 <code>交换分区(SWAP)</code> 、 <code>根分区(Btrfs)</code>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkfs.fat -F 32 /dev/sdxn</span><br><span class="line">mkswap /dev/sdxn</span><br><span class="line">mkfs.btrfs -L myArch /dev/sdxn</span><br></pre></td></tr></table></figure>
+
+<p>为了创建子卷，我们需要先将 Btrfs 分区挂载到 <code>/mnt</code> 下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount -t btrfs -o compress=zstd /dev/sdxn /mnt</span><br></pre></td></tr></table></figure>
+<p>创建btrfs子卷，此处创建名为 <code>@</code> 和 <code>@home</code> 的两个子卷。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">btrfs subvolume create /mnt/@      # 创建 / 目录子卷</span><br><span class="line">btrfs subvolume create /mnt/@home  # 创建 /home 目录子卷</span><br></pre></td></tr></table></figure>
+<div class="note danger"><p>为了使用 <code>timeshift</code> 进行创建和恢复快照，此处一定要使用 <code>@</code> 和 <code>@home</code> 这两个名称。</p>
+</div>
+
+<p>查看子卷创建情况：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ btrfs subvolume list -p /mnt</span><br><span class="line">ID 266 gen 2891 parent 5 top level 5 path @</span><br><span class="line">ID 267 gen 2890 parent 5 top level 5 path @home</span><br></pre></td></tr></table></figure>
+
+<p>对 <code>/mnt</code> 进行卸载，以在下一步中对子卷进行挂载：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">umount /mnt</span><br></pre></td></tr></table></figure>
+
+<h2 id="挂载分区"><a href="#挂载分区" class="headerlink" title="挂载分区"></a>挂载分区</h2><div class="tabs" id="fourth-unique-name"><ul class="nav-tabs"><li class="tab active"><a href="#fourth-unique-name-1">btrfs 文件系统</a></li><li class="tab"><a href="#fourth-unique-name-2">ext4 文件系统</a></li></ul><div class="tab-content"><div class="tab-pane active" id="fourth-unique-name-1"><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mount -t btrfs -o subvol=/@,compress=zstd /dev/sdxn /mnt <span class="comment"># 挂载 / 目录</span></span><br><span class="line"><span class="built_in">mkdir</span> /mnt/home                 <span class="comment"># 创建 /home 目录</span></span><br><span class="line">mount -t btrfs -o subvol=/@home,compress=zstd /dev/sdxn /mnt/home <span class="comment"># 挂载 /home 目录</span></span><br><span class="line"><span class="built_in">mkdir</span> -p /mnt/boot/efi          <span class="comment"># 创建 /boot/efi 目录</span></span><br><span class="line">mount /dev/sdxn /mnt/boot/efi   <span class="comment"># 挂载 /boot/efi 目录</span></span><br><span class="line">swapon /dev/sdxn                <span class="comment"># 挂载交换分区</span></span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="fourth-unique-name-2"><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mount /dev/sda2 /mnt</span><br><span class="line"><span class="built_in">mkdir</span> /mnt/home</span><br><span class="line"><span class="built_in">mkdir</span> /mnt/boot</span><br><span class="line">mount /dev/sda1 /mnt/boot</span><br><span class="line">mount /dev/sda3 /mnt/home</span><br></pre></td></tr></table></figure></div></div></div>
+
+<h2 id="安装基本系统"><a href="#安装基本系统" class="headerlink" title="安装基本系统"></a>安装基本系统</h2><p>必须安装的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pacstrap /mnt base base-devel linux linux-firmware</span><br></pre></td></tr></table></figure>
+
+<p>常用的，根据实际需要添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pacstrap /mnt dhcpcd iwd vim vi zsh zsh-completions btrfs-progs openssh git wget</span><br></pre></td></tr></table></figure>
+
+<h2 id="生成-fstab-文件"><a href="#生成-fstab-文件" class="headerlink" title="生成 fstab 文件"></a>生成 fstab 文件</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">genfstab -U /mnt &gt; /mnt/etc/fstab</span><br></pre></td></tr></table></figure>
+
+<div class="note danger"><p>如果使用 btrfs 文件系统则必须修改 &#x2F;mnt&#x2F;etc&#x2F;fstab 文件内容，需要删除 <code>/</code> 和 <code>/home</code> 条目中的 <code>subvolid=xxx</code> 参数，否则在使用 timeshift 进行恢复后会无法进入系统。</p>
+</div>
+
+<h2 id="change-root"><a href="#change-root" class="headerlink" title="change root"></a>change root</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arch-chroot /mnt</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置主机名与时区"><a href="#设置主机名与时区" class="headerlink" title="设置主机名与时区"></a>设置主机名与时区</h2><p><code>vim /etc/hostname</code> 设置主机名为<code>myarch</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">myarch</span><br></pre></td></tr></table></figure>
+
+<p><code>vim /etc/hosts</code> 设置ip与域名解析，需要和主机名一致。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1   localhost</span><br><span class="line">::1         localhost</span><br><span class="line">127.0.1.1   myarch.localdomain	myarch</span><br></pre></td></tr></table></figure>
+
+<p>设置时区</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置-Locale"><a href="#设置-Locale" class="headerlink" title="设置 Locale"></a>设置 Locale</h2><p>编辑 <code>vim /etc/locale.gen</code>，去掉 <code>en_US.UTF-8 UTF-8</code> 以及 <code>zh_CN.UTF-8 UTF-8</code> 行前的注释符号。<br>然后使用如下命令生成 locale：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">locale-gen</span><br></pre></td></tr></table></figure>
+<p>编辑 <code>vim /etc/locale.conf</code> 添加如下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LANG=en_US.UTF-8</span><br></pre></td></tr></table></figure>
+
+<h2 id="为-root-用户设置密码"><a href="#为-root-用户设置密码" class="headerlink" title="为 root 用户设置密码"></a>为 root 用户设置密码</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">passwd root</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装微码"><a href="#安装微码" class="headerlink" title="安装微码"></a>安装微码</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pacman -S intel-ucode  # Intel</span><br><span class="line">pacman -S amd-ucode    # AMD</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装引导程序"><a href="#安装引导程序" class="headerlink" title="安装引导程序"></a>安装引导程序</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pacman -S grub efibootmgr os-prober</span><br></pre></td></tr></table></figure>
+
+<p>安装 GRUB 到 EFI 分区：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grub-install --efi-directory=/boot/efi --bootloader-id=ArchLinux</span><br></pre></td></tr></table></figure>
+
+<p>修改 <code>vim /etc/default/grub</code> 文件，打开<code>GRUB_DISABLE_OS_PROBER=false</code>这项，<br>最后使用如下命令生成 GRUB 所需的配置文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grub-mkconfig -o /boot/grub/grub.cfg</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装完成"><a href="#安装完成" class="headerlink" title="安装完成"></a>安装完成</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">exit            # 退回安装环境</span><br><span class="line">umount -R /mnt  # 卸载新分区</span><br><span class="line">reboot          # 重启</span><br></pre></td></tr></table></figure>
+
+<div class="note info"><p>重启进入系统后，如果需要系统备份，可查看这篇文章 <a href="/2022/11/29/Create-and-restore-btrfs-file-system-snapshots/" title="Btrfs 文件系统快照的创建与恢复">Btrfs 文件系统快照的创建与恢复</a></p>
+</div>
+
+<h2 id="创建非root用户"><a href="#创建非root用户" class="headerlink" title="创建非root用户"></a>创建非root用户</h2><p>创建名为 <code>myusername</code> 的普通用户：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">useradd -m -G wheel -s /bin/bash myusername</span><br></pre></td></tr></table></figure>
+
+<p>设置新用户密码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">passwd myusername</span><br></pre></td></tr></table></figure>
+
+<p>修改 <code>sudoers</code> 文件，命令如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EDITOR=vim visudo</span><br></pre></td></tr></table></figure>
+
+<p>将如下所示行前的 <code>#</code> 删除后保存：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#%wheel ALL=(ALL) ALL</span><br></pre></td></tr></table></figure>
+
+<h2 id="开启32位库和archlinuxcn库"><a href="#开启32位库和archlinuxcn库" class="headerlink" title="开启32位库和archlinuxcn库"></a>开启32位库和archlinuxcn库</h2><p>编辑 <code>vim /etc/pacman.conf</code> 文件，将如下两行前的 <code>#</code> 删除即可开启32位库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#[multilib]</span><br><span class="line">#Include = /etc/pacman.d/mirrorlist</span><br></pre></td></tr></table></figure>
+
+<p>然后在文件末尾加入archlinuxcn源：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[archlinuxcn]</span><br><span class="line">Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch # 中国科学技术大学开源镜像站</span><br></pre></td></tr></table></figure>
+
+<p>保存后运行如下命令更新并安装 <code>archlinuxcn-keyring</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pacman -Syyu</span><br><span class="line">pacman -S archlinuxcn-keyring</span><br><span class="line">pacman -S yay</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装-gnome-桌面"><a href="#安装-gnome-桌面" class="headerlink" title="安装 gnome 桌面"></a>安装 gnome 桌面</h2><div class="note warning"><p>安装桌面环境前必须完成 <a href="#%E5%88%9B%E5%BB%BA%E9%9D%9Eroot%E7%94%A8%E6%88%B7">创建非root用户</a> 和 <a href="#%E5%BC%80%E5%90%AF32%E4%BD%8D%E5%BA%93%E5%92%8Carchlinuxcn%E5%BA%93">开启32位库和archlinuxcn库</a> 这两步。</p>
+</div>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pacman -Syy</span><br><span class="line">pacman -Sy wqy-zenhei gnome gnome-extra </span><br></pre></td></tr></table></figure>
+
+<h2 id="安装-KDE-Plasma-桌面环境"><a href="#安装-KDE-Plasma-桌面环境" class="headerlink" title="安装 KDE Plasma 桌面环境"></a>安装 KDE Plasma 桌面环境</h2><div class="note warning"><p>安装桌面环境前必须完成 <a href="#%E5%88%9B%E5%BB%BA%E9%9D%9Eroot%E7%94%A8%E6%88%B7">创建非root用户</a> 和 <a href="#%E5%BC%80%E5%90%AF32%E4%BD%8D%E5%BA%93%E5%92%8Carchlinuxcn%E5%BA%93">开启32位库和archlinuxcn库</a> 这两步。</p>
+</div>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pacman -S plasma-meta kde-applications-meta</span><br></pre></td></tr></table></figure>
+
+<p>完成后开启 sddm 的开机启动，然后重启系统就可以进入桌面环境：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl enable sddm</span><br><span class="line">reboot</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装基础软件"><a href="#安装基础软件" class="headerlink" title="安装基础软件"></a>安装基础软件</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -S yay</span><br><span class="line">sudo pacman -S ntfs-3g # 使系统可以识别 NTFS 格式的硬盘</span><br><span class="line">sudo pacman -S adobe-source-han-serif-cn-fonts wqy-zenhei # 安装几个开源中文字体。</span><br><span class="line">sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra # 安装谷歌开源字体及表情</span><br><span class="line">sudo pacman -S flameshot vlc # 截屏 视频播放器</span><br><span class="line">yay -S visual-studio-code-bin</span><br><span class="line">yay -S microsoft-edge-stable-bin</span><br><span class="line">yay -S wps-office-cn ttf-wps-fonts wps-office-mui-zh-cn </span><br><span class="line">yay -S yesplaymusic # 音乐播放器</span><br><span class="line">yay -S tabby-bin</span><br></pre></td></tr></table></figure>
+
+<h2 id="启动蓝牙"><a href="#启动蓝牙" class="headerlink" title="启动蓝牙"></a>启动蓝牙</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -S bluez bluez-utils</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装输入法"><a href="#安装输入法" class="headerlink" title="安装输入法"></a>安装输入法</h2><p>安装必要软件包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -S fcitx5-im # 输入法基础包组</span><br><span class="line">sudo pacman -S fcitx5-chinese-addons # 官方中文输入引擎</span><br><span class="line">sudo pacman -S fcitx5-material-color # 输入法主题</span><br></pre></td></tr></table></figure>
+
+<p>添加环境变量 <code>sudo vim /etc/environment</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GTK_IM_MODULE=fcitx</span><br><span class="line">QT_IM_MODULE=fcitx</span><br><span class="line">XMODIFIERS=@im=fcitx</span><br><span class="line">SDL_IM_MODULE=fcitx</span><br><span class="line">GLFW_IM_MODULE=ibus</span><br></pre></td></tr></table></figure>
+
+<p>打开 <code>系统设置</code> &gt; <code>区域设置</code> &gt; <code>输入法</code> 然后点击 <code>运行 Fcitx</code> </p>
+<h3 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a>方案一</h3><p>使用 <code>fcitx5-chinese-addons</code> 软件包中的双拼输入法， <code>添加输入法</code> &gt; <code>Shuangpin</code> &gt; <code>添加</code> 即可。</p>
+<h3 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a>方案二</h3><p>首先必须先按照 <a target="_blank" rel="noopener" href="https://arch.icekylin.online/advanced/optional-cfg-1.html#%F0%9F%8D%80%EF%B8%8F-%E8%BE%93%E5%85%A5%E6%B3%95">输入法教程</a> 安装好 <a target="_blank" rel="noopener" href="https://github.com/fkxxyz/rime-cloverpinyin">🍀️四叶草拼音输入方案</a>。</p>
+<p>然后从这个 <a target="_blank" rel="noopener" href="https://github.com/so1ar/rime-cloverpinyin">rime-cloverpinyin</a> 项目中下载 <code>clover-flypy.schema.yaml</code> 文件，放到目录 <code>~/.local/share/fcitx5/rime</code> 下面，或者直接使用下面命令下载到指定目录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -P ~/.local/share/fcitx5/rime https://raw.githubusercontent.com/so1ar/rime-cloverpinyin/main/src/clover-flypy.schema.yaml</span><br></pre></td></tr></table></figure>
+
+<p>然后修改 <code>default.custom.yaml</code> 文件中的 <code>clover</code> 为 <code>clover-flypy</code> 后重新部署即可。</p>
+<h2 id="安装-powerlevel10k"><a href="#安装-powerlevel10k" class="headerlink" title="安装 powerlevel10k"></a>安装 powerlevel10k</h2><p>安装 zim 框架</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -fsSL https://raw.githubusercontent.com/zimfw/install/master/install.zsh | zsh</span><br></pre></td></tr></table></figure>
+
+<p>编辑配置文件<code>vim ~/.zimrc</code>，在最后添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zmodule romkatv/powerlevel10k --use degit</span><br></pre></td></tr></table></figure>
+
+<p>然后运行<code>zimfw install</code>进行安装。<br>运行 <code>p10k configure</code> 进行配置。需要下面这4个字体：</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf">MesloLGS NF Regular.ttf</a><br><a target="_blank" rel="noopener" href="https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf">MesloLGS NF Bold.ttf</a><br><a target="_blank" rel="noopener" href="https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf">MesloLGS NF Italic.ttf</a><br><a target="_blank" rel="noopener" href="https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf">MesloLGS NF Bold Italic.ttf</a>  </p>
+<h2 id="显卡驱动"><a href="#显卡驱动" class="headerlink" title="显卡驱动"></a>显卡驱动</h2><div class="note warning"><p>安装显卡驱动前建议先按照这篇文章对系统进行备份 <a href="/2022/11/29/Create-and-restore-btrfs-file-system-snapshots/" title="Btrfs 文件系统快照的创建与恢复">Btrfs 文件系统快照的创建与恢复</a></p>
+</div>
+
+<h3 id="AMD-核心显卡"><a href="#AMD-核心显卡" class="headerlink" title="AMD 核心显卡"></a>AMD 核心显卡</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -S mesa lib32-mesa xf86-video-amdgpu vulkan-radeon lib32-vulkan-radeon</span><br></pre></td></tr></table></figure>
+
+<h3 id="NVIDIA-独立显卡"><a href="#NVIDIA-独立显卡" class="headerlink" title="NVIDIA 独立显卡"></a>NVIDIA 独立显卡</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo pacman -S nvidia nvidia-settings lib32-nvidia-utils</span><br></pre></td></tr></table></figure>
+<div class="note warning"><p>安装完成后一定要 <strong>重启系统</strong>，然后运行 <code>nvidia-smi</code> 查看是否报错。</p>
+</div>
+
+<p><code>nvidia-smi</code> 输出报错的解决办法是运行如下命令然后<strong>重启系统</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mkinitcpio -p linux</span><br></pre></td></tr></table></figure>
+<p>如果 <code>nvidia-smi</code> 有正常输出说明 NVIDIA 独立显卡驱动安装成功可进行下一步。</p>
+<h3 id="核显-与-独显-切换"><a href="#核显-与-独显-切换" class="headerlink" title="核显 与 独显 切换"></a>核显 与 独显 切换</h3><p>安装如下软件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yay -S optimus-manager optimus-manager-qt # 主程序 和 图形界面</span><br></pre></td></tr></table></figure>
+<p>设置自动启动</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl enable optimus-manager.service</span><br></pre></td></tr></table></figure>
+<p>重启后在菜单栏启动 optimus-manager 图形界面，在其中可设置图形界面开机自启。</p>
+<h2 id="再生龙恢复后无法启动"><a href="#再生龙恢复后无法启动" class="headerlink" title="再生龙恢复后无法启动"></a>再生龙恢复后无法启动</h2><ol>
+<li><p>使用命令<code>ls</code>查看分区，会出现如下字样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(hd0) (hd0,msdos9) (hd0,msdos8) (hd0,msdos7) (hd0,msdos6) (hd0,msdos5) (hd0,msdos2) (hd0,msdos1)</span><br></pre></td></tr></table></figure>
+<p>注：上面是我的分区设备，每个人可能不一样，但原理都是一样的。</p>
+</li>
+<li><p>寻找ubuntu所在分区：（就是寻找你的Linux系统是装在以上哪个分区里）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grub rescue&gt; ls (hd0,msdos1)/</span><br></pre></td></tr></table></figure>
+<p>若出现的是你的ubuntu主文件夹下的文件夹和文件的名字，那就是的要找的分区了。</p>
+</li>
+<li><p>修改启动分区：<br>（假如你找到的启动分区是hd0,msdos8）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">grub rescue &gt; set root=(hd0,msdos8)</span><br><span class="line">grub rescue &gt; set prefix=(hd0,msdos8)/boot/grub</span><br><span class="line">grub rescue &gt; insmod normal                            //启动normal启动</span><br><span class="line">grub rescue &gt; normal</span><br></pre></td></tr></table></figure>
+<p>之后你就会看到熟悉的启动菜单栏了</p>
+</li>
+<li><p>进入系统后运行以下命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo update-grub</span><br><span class="line">sudo grub-install</span><br></pre></td></tr></table></figure>
+<p>如果出现这个错误<code>/usr/bin/grub-probe：警告： 未知的设备类型 nvme1n1.</code>，可以将<code>/etc/grub.d/60_memtest86+</code>文件删除</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo rm -rf /etc/grub.d/60_memtest86+</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Eclipse-安装记录"><a href="#Eclipse-安装记录" class="headerlink" title="Eclipse 安装记录"></a>Eclipse 安装记录</h2><p><a target="_blank" rel="noopener" href="https://www.eclipse.org/downloads/packages/">Eclipse下载地址</a> 下载对应平台软件。</p>
+<h3 id="汉化"><a href="#汉化" class="headerlink" title="汉化"></a>汉化</h3><p>打开 eclipse 软件找到 ‘Help’ &gt; ‘Install new software…’</p>
+<p>然后添加 <code>https://download.eclipse.org/technology/babel/update-site/latest/</code></p>
+<p>到底中文简体安装。</p>
+<p>如果启动还是英文，需要在启动时添加 <code>-nl zh</code>。</p>
+<h2 id="重启到-BISO"><a href="#重启到-BISO" class="headerlink" title="重启到 BISO"></a>重启到 BISO</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl reboot --firmware-setup</span><br></pre></td></tr></table></figure>
+
+<h2 id="自动挂载ntfs"><a href="#自动挂载ntfs" class="headerlink" title="自动挂载ntfs"></a>自动挂载ntfs</h2><p><code>sudo vim /etc/fstab</code> </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/dev/nvme1n1p1  /run/media/lituo/Data2          ntfs    noatime,auto,rw,noexec,async,user,suid 0 2</span><br><span class="line">/dev/nvme0n1p3  /run/media/lituo/Data           ntfs    noatime,auto,rw,noexec,async,user,suid 0 2</span><br><span class="line">/dev/nvme0n1p2  /run/media/lituo/windows        ntfs    noatime,auto,rw,noexec,async,user,suid 0 2</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="李拓 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="李拓 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>李拓
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://blog.lituo.xyz/2022/11/29/arch-linux-installation-records/" title="Arch Linux 安装记录">https://blog.lituo.xyz/2022/11/29/arch-linux-installation-records/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a>
+              <a href="/tags/Arch-Linux/" rel="tag"><i class="fa fa-tag"></i> Arch Linux</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/04/16/GUN-Screen-tool-use/" rel="prev" title="Linux 下 "GNU Screen" 工具的使用">
+                  <i class="fa fa-chevron-left"></i> Linux 下 "GNU Screen" 工具的使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/11/29/Create-and-restore-btrfs-file-system-snapshots/" rel="next" title="Btrfs 文件系统快照的创建与恢复">
+                  Btrfs 文件系统快照的创建与恢复 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="lv-container" data-id="city" data-uid="MTAyMC81NzcxMS8zNDE3NA=="></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart-pulse"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">李拓</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+<script src="/js/third-party/comments/livere.js"></script>
+
+</body>
+</html>
