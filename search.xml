@@ -71,26 +71,6 @@
       </tags>
   </entry>
   <entry>
-    <title>音视频处理软件FFmpeg使用记录</title>
-    <url>/2038831152/</url>
-    <content><![CDATA[<p>FFmpeg是一套可以用来记录、转换数字音频、视频，并能将其转化为流的开源计算机程序。采用LGPL或 GPL 许可证。它提供了录制、转换以及流化音视频的完整解决方案。</p>
-<span id="more"></span>
-
-<h2 id="音视频剪裁"><a href="#音视频剪裁" class="headerlink" title="音视频剪裁"></a>音视频剪裁</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -i output.mp4 -ss 00:00:40 -t 30 output1.mp4</span><br></pre></td></tr></table></figure>
-<p><code>-i output.mp4</code>源文件。<br><code>-ss 00:00:40</code>表示剪裁开始时间，时：分：秒<br><code>-t 30</code>表示剪裁时长，单位秒。<br><code>output1.mp4</code>输出文件名。</p>
-<h2 id="音视频合并"><a href="#音视频合并" class="headerlink" title="音视频合并"></a>音视频合并</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -f concat -i inputs.txt out.mp4</span><br></pre></td></tr></table></figure>
-
-<p><code>-f concat</code>合并命令<br><code>-i inputs.txt</code>中input.txt文件中添加需要合并的文件名，格式如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">file &#x27;input1.mp4&#x27;</span><br><span class="line">file &#x27;input2.mp4&#x27;</span><br></pre></td></tr></table></figure>
-<p><code>out.mp4</code>输出文件名</p>
-<h2 id="视频提取音频"><a href="#视频提取音频" class="headerlink" title="视频提取音频"></a>视频提取音频</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -i input.mp4 -vn output.mp3</span><br></pre></td></tr></table></figure>
-<p><code>-i input.mp4</code>输入文件<br><code>-vn</code>提取音频<br><code>-acodec copy</code>音频编码方式不变<br><code>output.mp3</code>输出文件</p>
-]]></content>
-      <tags>
-        <tag>ffmpeg</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>FiveM服务器搭建</title>
     <url>/1894076325/</url>
     <content><![CDATA[<p>玩GTA5都是想在游戏里“为所欲为”，我们可以装修改器和装几个MOD，这些方法我们可以在单机的时候玩，但是自己玩总归是有些无聊。我们也知道GTA5在线模式，但是因为装了修改器和MOD有可能被封号。<br>我需要一种办法，既能在游戏里“为所欲为”，又能和小伙伴们联机玩游戏，接下来我们就介绍搭建FiveM服务器。</p>
@@ -142,6 +122,26 @@
       <tags>
         <tag>FiveM</tag>
         <tag>GTA5</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>音视频处理软件FFmpeg使用记录</title>
+    <url>/2038831152/</url>
+    <content><![CDATA[<p>FFmpeg是一套可以用来记录、转换数字音频、视频，并能将其转化为流的开源计算机程序。采用LGPL或 GPL 许可证。它提供了录制、转换以及流化音视频的完整解决方案。</p>
+<span id="more"></span>
+
+<h2 id="音视频剪裁"><a href="#音视频剪裁" class="headerlink" title="音视频剪裁"></a>音视频剪裁</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -i output.mp4 -ss 00:00:40 -t 30 output1.mp4</span><br></pre></td></tr></table></figure>
+<p><code>-i output.mp4</code>源文件。<br><code>-ss 00:00:40</code>表示剪裁开始时间，时：分：秒<br><code>-t 30</code>表示剪裁时长，单位秒。<br><code>output1.mp4</code>输出文件名。</p>
+<h2 id="音视频合并"><a href="#音视频合并" class="headerlink" title="音视频合并"></a>音视频合并</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -f concat -i inputs.txt out.mp4</span><br></pre></td></tr></table></figure>
+
+<p><code>-f concat</code>合并命令<br><code>-i inputs.txt</code>中input.txt文件中添加需要合并的文件名，格式如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">file &#x27;input1.mp4&#x27;</span><br><span class="line">file &#x27;input2.mp4&#x27;</span><br></pre></td></tr></table></figure>
+<p><code>out.mp4</code>输出文件名</p>
+<h2 id="视频提取音频"><a href="#视频提取音频" class="headerlink" title="视频提取音频"></a>视频提取音频</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -i input.mp4 -vn output.mp3</span><br></pre></td></tr></table></figure>
+<p><code>-i input.mp4</code>输入文件<br><code>-vn</code>提取音频<br><code>-acodec copy</code>音频编码方式不变<br><code>output.mp3</code>输出文件</p>
+]]></content>
+      <tags>
+        <tag>ffmpeg</tag>
       </tags>
   </entry>
   <entry>
