@@ -1,5 +1,6 @@
 https://blog.lituo.xyz/2023/10/27/Hexo-installation-configuration-issues/
 https://blog.lituo.xyz/2023/10/27/Vscode-to-configure-the-esp-idf-extension/
+https://blog.lituo.xyz/2023/10/27/PIC-microcontroller-learning-records/
 https://blog.lituo.xyz/tags/index.html
 https://blog.lituo.xyz/2022/11/29/Create-and-restore-btrfs-file-system-snapshots/
 https://blog.lituo.xyz/2019/04/11/FFmpeg-tools-use/
@@ -22,3 +23,8 @@ https://blog.lituo.xyz/tags/STC8F/
 https://blog.lituo.xyz/tags/%E5%8D%95%E7%89%87%E6%9C%BA/
 https://blog.lituo.xyz/tags/Termux/
 https://blog.lituo.xyz/tags/Arch-Linux/
+https://blog.lituo.xyz/tags/PIC/
+https://blog.lituo.xyz/tags/Hexo/
+https://blog.lituo.xyz/tags/Esp-idf/
+https://blog.lituo.xyz/tags/Vscode/
+https://blog.lituo.xyz/tags/ESP32/
