@@ -577,4 +577,13 @@
         <tag>Arch Linux</tag>
       </tags>
   </entry>
+  <entry>
+    <title>C 语言学习记录</title>
+    <url>/314847128/</url>
+    <content><![CDATA[<h2 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h2><h3 id="双重指针作为函数参数"><a href="#双重指针作为函数参数" class="headerlink" title="双重指针作为函数参数"></a>双重指针作为函数参数</h3><p>函数定义如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">esp_err_t esp_http_client_get_header(esp_http_client_handle_t client, const char *key, char **value)</span><br><span class="line">&#123;</span><br><span class="line">    return http_header_get(client-&gt;request-&gt;headers, key, value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用方法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">char * test1 = NULL;</span><br><span class="line">esp_http_client_get_header(client, &quot;User-Agent&quot;, &amp;test1);</span><br><span class="line">ESP_LOGI(TAG, &quot;header: %s&quot;, test1);</span><br></pre></td></tr></table></figure>]]></content>
+  </entry>
 </search>
