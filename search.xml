@@ -357,6 +357,8 @@
 
 <h2 id="有些还是无法跳转的问题"><a href="#有些还是无法跳转的问题" class="headerlink" title="有些还是无法跳转的问题"></a>有些还是无法跳转的问题</h2><p>工程第一次编译通过后，在 <code>.vscode/c_cpp_properties.json</code> 的 <code>configurations</code> 中添加</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&quot;compileCommands&quot;: &quot;$&#123;workspaceFolder&#125;/build/compile_commands.json&quot;,</span><br></pre></td></tr></table></figure>
+
+<h2 id="加快编译速度"><a href="#加快编译速度" class="headerlink" title="加快编译速度"></a>加快编译速度</h2><p>在vscode的ESP-IDF设置里开启缓存，在Vscode的设置中搜索<code>idf:Enable CCache</code> 然后勾上。</p>
 ]]></content>
       <tags>
         <tag>ESP32</tag>
